@@ -1,0 +1,26 @@
+skill_id: tesla
+name: Tesla
+version: 1.0.0
+description: "Control your Tesla"
+author: opendispatch
+author_url: https://opendispatch.ai
+languages:
+  - en
+bridge_shortcut:
+  name: "OpenDispatch - Tesla V1"
+  share_url: "https://www.icloud.com/shortcuts/abc123"
+actions:
+  - id: vehicle.unlock
+    title: Unlock
+    description: "Unlock the car doors"
+    examples:
+      - "unlock my car"
+      - "unlock the tesla"
+  - id: vehicle.climate.set_temperature
+    title: Set Temperature
+    description: "Set the cabin temperature"
+    parameters:
+      - name: temperature
+        type: number
+    examples:
+      - "set my car to 72 degrees"
