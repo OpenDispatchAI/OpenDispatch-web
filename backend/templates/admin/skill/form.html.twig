@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ skill ? 'Edit' : 'New' }} Skill — OpenDispatch Admin{% endblock %}
+
+{% block body %}
+<h1>{{ skill ? 'Edit Skill: ' ~ skill.skillId : 'New Skill' }}</h1>
+
+{% for flash in app.flashes('error') %}
+    <div class="alert alert-danger">{{ flash }}</div>
+{% endfor %}
+
+{{ form_start(form) }}
+    {{ form_row(form.yamlFile) }}
+    {{ form_row(form.iconFile) }}
+    {{ form_row(form.tags) }}
+    <button type="submit">Save</button>
+{{ form_end(form) }}
+
+<a href="{{ path('app_admin_skill_list') }}">Back to list</a>
+
+{% if skill %}
+    <h2>Current YAML</h2>
+    <pre>{{ skill.yamlContent }}</pre>
+{% endif %}
+{% endblock %}

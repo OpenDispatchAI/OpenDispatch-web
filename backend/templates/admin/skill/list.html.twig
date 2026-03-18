@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Skills — OpenDispatch Admin{% endblock %}
+
+{% block body %}
+<h1>Skills</h1>
+
+{% for flash in app.flashes('success') %}
+    <div class="alert alert-success">{{ flash }}</div>
+{% endfor %}
+{% for flash in app.flashes('error') %}
+    <div class="alert alert-danger">{{ flash }}</div>
+{% endfor %}
+
+<a href="{{ path('app_admin_skill_create') }}">Add Skill</a>
+
+<form method="post" action="{{ path('app_admin_compile') }}" style="display:inline">
+    <button type="submit">Compile</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Skill ID</th>
+            <th>Tags</th>
+            <th>Published</th>
+            <th>Updated</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for skill in skills %}
+        <tr>
+            <td>{{ skill.skillId }}</td>
+            <td>{{ skill.tags|join(', ') }}</td>
+            <td>{{ skill.publishedAt ? skill.publishedAt|date('Y-m-d H:i') : '—' }}</td>
+            <td>{{ skill.updatedAt|date('Y-m-d H:i') }}</td>
+            <td>
+                <a href="{{ path('app_admin_skill_edit', {id: skill.id}) }}">Edit</a>
+
+                {% if skill.published %}
+                    <form method="post" action="{{ path('app_admin_skill_unpublish', {id: skill.id}) }}" style="display:inline">
+                        <button type="submit">Unpublish</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{{ path('app_admin_skill_publish', {id: skill.id}) }}" style="display:inline">
+                        <button type="submit">Publish</button>
+                    </form>
+                {% endif %}
+
+                <form method="post" action="{{ path('app_admin_skill_delete', {id: skill.id}) }}" style="display:inline"
+                      onsubmit="return confirm('Delete this skill?')">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ skill.id) }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5">No skills yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
