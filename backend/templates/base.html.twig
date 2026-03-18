@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OpenDispatch Admin{% endblock %}</title>
+    {% block stylesheets %}{% endblock %}
+    {% block importmap %}{{ importmap('app') }}{% endblock %}
+</head>
+<body>
+    {% if app.user %}
+    <nav>
+        <a href="{{ path('app_admin_skill_list') }}"><strong>OpenDispatch</strong></a>
+        <div>
+            <span>{{ app.user.email }}</span>
+            <a href="{{ path('app_logout') }}">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
+    <div class="container">
         {% block body %}{% endblock %}
-    </body>
+    </div>
+
+    {% block javascripts %}{% endblock %}
+</body>
 </html>
