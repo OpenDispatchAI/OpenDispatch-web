@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}OpenDispatch — Automate Your iPhone with Natural Language{% endblock %}
+
+{% block body %}
+<div class="hero">
+    <h1>OpenDispatch</h1>
+    <p class="hero-subtitle">Automate your iPhone with natural language. Say what you want — OpenDispatch calls the right shortcut.</p>
+    <a href="{{ path('app_skills') }}" class="btn btn-primary btn-lg">Browse Skills</a>
+</div>
+
+<div class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps">
+        <div class="step">
+            <strong>1. Install a Skill</strong>
+            <p>Browse the skill catalog and add the automations you want.</p>
+        </div>
+        <div class="step">
+            <strong>2. Speak Naturally</strong>
+            <p>Tell OpenDispatch what you want to do — no exact phrases needed.</p>
+        </div>
+        <div class="step">
+            <strong>3. It Just Works</strong>
+            <p>OpenDispatch matches your intent to the right action and runs it.</p>
+        </div>
+    </div>
+</div>
+
+<div class="stats-section">
+    <div class="stat">
+        <strong>{{ skill_count }}</strong>
+        <span>Skills Available</span>
+    </div>
+    <div class="stat">
+        <strong>{{ download_count }}</strong>
+        <span>Downloads</span>
+    </div>
+</div>
+{% endblock %}
