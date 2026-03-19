@@ -68,4 +68,4 @@ The app is available at `http://localhost:8080`.
 
 ## License
 
-MIT
+Apache 2.0
