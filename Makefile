@@ -1,4 +1,4 @@
-.PHONY: up down build shell migrate test compile console
+.PHONY: up down build shell migrate test compile sync console
 
 up:
 	docker compose up -d
@@ -20,6 +20,9 @@ test:
 
 compile:
 	docker compose exec php bin/console app:compile
+
+sync:
+	docker compose exec php bin/console app:sync
 
 console:
 	docker compose exec php bin/console $(cmd)
