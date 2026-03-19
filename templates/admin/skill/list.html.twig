@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Skills — OpenDispatch Admin{% endblock %}
+
+{% block body %}
+<h1>Skills</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Version</th>
+            <th>Tags</th>
+            <th>Downloads</th>
+            <th>Featured</th>
+            <th>Last Synced</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for skill in skills %}
+        <tr>
+            <td><strong>{{ skill.name }}</strong><br><small>{{ skill.skillId }}</small></td>
+            <td>{{ skill.version }}</td>
+            <td>
+                {% for tag in skill.tags %}
+                    <span class="badge">{{ tag }}</span>
+                {% endfor %}
+            </td>
+            <td>{{ skill.downloads|length }}</td>
+            <td><twig:FeaturedToggle :skill="skill" /></td>
+            <td>{{ skill.syncedAt|date('Y-m-d H:i') }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6">No skills yet. Run a sync first.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

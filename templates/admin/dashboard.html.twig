@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard — OpenDispatch Admin{% endblock %}
+
+{% block body %}
+<h1>Dashboard</h1>
+
+{% for flash in app.flashes('success') %}
+    <div class="alert alert-success">{{ flash }}</div>
+{% endfor %}
+{% for flash in app.flashes('error') %}
+    <div class="alert alert-danger">{{ flash }}</div>
+{% endfor %}
+
+<div class="stats">
+    <div class="stat">
+        <strong>{{ skill_count }}</strong>
+        <span>Skills</span>
+    </div>
+    <div class="stat">
+        <strong>{{ total_downloads }}</strong>
+        <span>Total Downloads</span>
+    </div>
+    <div class="stat">
+        <strong>{{ last_sync ? last_sync.syncedAt|date('Y-m-d H:i') : 'Never' }}</strong>
+        <span>Last Sync</span>
+        {% if last_sync %}
+            <small>{{ last_sync.status }}</small>
+        {% endif %}
+    </div>
+</div>
+
+<div class="toolbar">
+    <form method="post" action="{{ path('app_admin_resync') }}">
+        <button type="submit" class="btn btn-primary">Resync from GitHub</button>
+    </form>
+</div>
+
+<nav>
+    <a href="{{ path('app_admin_skills') }}">Skills</a> |
+    <a href="{{ path('app_admin_sync_log') }}">Sync Log</a>
+</nav>
+{% endblock %}
