@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ slug|replace({'-': ' '})|title }} — OpenDispatch Docs{% endblock %}
+
+{% block body %}
+<div class="docs-layout">
+    <aside class="docs-sidebar">
+        <h3>Documentation</h3>
+        <nav>
+            {% for item in navigation %}
+                <a href="{{ path('app_docs', {slug: item.slug}) }}"
+                   class="{{ slug == item.slug ? 'active' : '' }}">
+                    {{ item.title }}
+                </a>
+            {% endfor %}
+        </nav>
+    </aside>
+
+    <main class="docs-content">
+        {{ content|raw }}
+    </main>
+</div>
+{% endblock %}

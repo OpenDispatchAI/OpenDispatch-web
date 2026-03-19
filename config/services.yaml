@@ -38,3 +38,7 @@ services:
         arguments:
             $skillsRepoUrl: '%env(SKILLS_REPO_URL)%'
             $skillsRepoDir: '%kernel.project_dir%/var/skills-repo'
+
+    App\Controller\Public\DocsController:
+        arguments:
+            $docsDir: '%kernel.project_dir%/content/docs'
