@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ skill.name }} — OpenDispatch{% endblock %}
+
+{% block body %}
+<div class="skill-detail">
+    <a href="{{ path('app_skills') }}">&larr; Back to Skills</a>
+
+    <h1>{{ skill.name }}</h1>
+    <p class="skill-meta">
+        v{{ skill.version }} &middot; by {{ skill.authorUrl ? '<a href="' ~ skill.authorUrl ~ '">' ~ skill.author ~ '</a>' : skill.author }} &middot;
+        {{ download_count }} downloads &middot;
+        {{ skill.actionCount }} actions
+    </p>
+
+    <div class="skill-tags">
+        {% for tag in skill.tags %}
+            <span class="badge">{{ tag }}</span>
+        {% endfor %}
+    </div>
+
+    <p>{{ skill.description }}</p>
+
+    {% if skill.requiresBridgeShortcut %}
+    <div class="alert alert-info">
+        This skill requires a bridge shortcut: <strong>{{ skill.bridgeShortcutName }}</strong>
+        {% if skill.bridgeShortcutShareUrl %}
+            — <a href="{{ skill.bridgeShortcutShareUrl }}" target="_blank">Install Shortcut</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <h2>Actions</h2>
+    <div class="action-list">
+        {% for action in actions %}
+        <div class="action-card">
+            <h3>{{ action.title ?? action.id }}</h3>
+            <code>{{ action.id }}</code>
+            {% if action.description is defined and action.description %}
+                <p>{{ action.description }}</p>
+            {% endif %}
+            {% if action.parameters is defined and action.parameters %}
+                <p><strong>Parameters:</strong>
+                    {% for param in action.parameters %}
+                        {{ param.name }} ({{ param.type }}){{ not loop.last ? ', ' }}
+                    {% endfor %}
+                </p>
+            {% endif %}
+            {% if action.examples is defined %}
+                <p class="examples"><strong>Examples:</strong></p>
+                <ul>
+                    {% for example in action.examples %}
+                        <li>"{{ example }}"</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>Languages</h2>
+    <p>{{ skill.languages|join(', ') }}</p>
+</div>
+{% endblock %}

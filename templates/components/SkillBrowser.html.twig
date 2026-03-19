@@ -38,7 +38,7 @@
 
     <div class="skill-grid" data-loading="addClass(opacity-50)">
         {% for skill in this.skills %}
-            <div class="skill-card">
+            <a href="{{ path('app_skill_detail', {skillId: skill.skillId}) }}" class="skill-card">
                 <h3>{{ skill.name }}</h3>
                 <p>{{ skill.description|length > 120 ? skill.description|slice(0, 120) ~ '...' : skill.description }}</p>
                 <div class="skill-card-meta">
@@ -52,7 +52,7 @@
                         <span class="badge">{{ t }}</span>
                     {% endfor %}
                 </div>
-            </div>
+            </a>
         {% else %}
             <p class="no-results">No skills found{{ query ? ' for "' ~ query ~ '"' : '' }}{{ tag ? ' with tag "' ~ tag ~ '"' : '' }}.</p>
         {% endfor %}
