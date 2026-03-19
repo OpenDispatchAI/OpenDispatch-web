@@ -1,0 +1,60 @@
+<div {{ attributes }}>
+    <div class="skill-browser-controls">
+        <div class="skill-browser-search">
+            <input
+                type="search"
+                placeholder="Search skills..."
+                data-model="debounce(300)|query"
+                value="{{ query }}"
+            >
+        </div>
+
+        <div class="skill-browser-sort">
+            <label>Sort by:</label>
+            <select data-model="sort">
+                <option value="name" {{ sort == 'name' ? 'selected' }}>Name</option>
+                <option value="popular" {{ sort == 'popular' ? 'selected' }}>Most Popular</option>
+                <option value="newest" {{ sort == 'newest' ? 'selected' }}>Newest</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="tag-chips">
+        <button
+            class="badge {{ tag == '' ? 'badge-active' : '' }}"
+            data-action="live#action"
+            data-live-action-param="filterByTag"
+            data-live-tag-param=""
+        >All</button>
+        {% for availableTag in this.tags %}
+            <button
+                class="badge {{ tag == availableTag ? 'badge-active' : '' }}"
+                data-action="live#action"
+                data-live-action-param="filterByTag"
+                data-live-tag-param="{{ availableTag }}"
+            >{{ availableTag }}</button>
+        {% endfor %}
+    </div>
+
+    <div class="skill-grid" data-loading="addClass(opacity-50)">
+        {% for skill in this.skills %}
+            <div class="skill-card">
+                <h3>{{ skill.name }}</h3>
+                <p>{{ skill.description|length > 120 ? skill.description|slice(0, 120) ~ '...' : skill.description }}</p>
+                <div class="skill-card-meta">
+                    <span>v{{ skill.version }}</span>
+                    <span>by {{ skill.author }}</span>
+                    <span>{{ skill.actionCount }} actions</span>
+                    <span>{{ skill.downloads|length }} downloads</span>
+                </div>
+                <div class="skill-card-tags">
+                    {% for t in skill.tags %}
+                        <span class="badge">{{ t }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <p class="no-results">No skills found{{ query ? ' for "' ~ query ~ '"' : '' }}{{ tag ? ' with tag "' ~ tag ~ '"' : '' }}.</p>
+        {% endfor %}
+    </div>
+</div>
