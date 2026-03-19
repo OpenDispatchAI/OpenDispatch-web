@@ -6,10 +6,12 @@ namespace App\Service;
 
 use App\Entity\Skill;
 use App\Repository\SkillRepository;
+use App\Trait\LoggerTrait;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillCompiler
 {
+    use LoggerTrait;
     public function __construct(
         private SkillRepository $skillRepository,
         private string $publicDir,
@@ -19,10 +21,14 @@ class SkillCompiler
     {
         $skills = $this->skillRepository->findAll();
         $this->compileIndex($skills);
+
         foreach ($skills as $skill) {
             $this->compileSkill($skill);
         }
+
         $this->cleanupRemovedSkills($skills);
+
+        $this->logger?->info('Compilation complete', ['skillCount' => count($skills)]);
     }
 
     /** @param Skill[] $skills */
@@ -36,21 +42,21 @@ class SkillCompiler
         ];
 
         $dir = $this->publicDir . '/api/v1';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        if (!@mkdir($dir, 0755, true) && !is_dir($dir)) {
+            throw new \RuntimeException("Failed to create directory: {$dir}");
         }
 
         file_put_contents(
             $dir . '/index.json',
-            json_encode($index, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+            json_encode($index, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
         );
     }
 
     private function compileSkill(Skill $skill): void
     {
         $skillDir = $this->publicDir . '/api/v1/skills/' . $skill->getSkillId();
-        if (!is_dir($skillDir)) {
-            mkdir($skillDir, 0755, true);
+        if (!@mkdir($skillDir, 0755, true) && !is_dir($skillDir)) {
+            throw new \RuntimeException("Failed to create directory: {$skillDir}");
         }
 
         // Write YAML
@@ -61,7 +67,7 @@ class SkillCompiler
         $info = $this->buildSkillInfo($skill, $data);
         file_put_contents(
             $skillDir . '/info.json',
-            json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+            json_encode($info, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
         );
 
         // Copy icon if available
@@ -134,7 +140,7 @@ class SkillCompiler
             return;
         }
 
-        $currentIds = array_map(fn(Skill $s) => $s->getSkillId(), $currentSkills);
+        $currentIds = array_map(static fn(Skill $s) => $s->getSkillId(), $currentSkills);
 
         foreach (new \DirectoryIterator($skillsDir) as $item) {
             if ($item->isDot() || !$item->isDir()) {

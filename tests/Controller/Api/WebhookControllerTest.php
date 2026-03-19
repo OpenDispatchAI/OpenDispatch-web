@@ -18,10 +18,10 @@ class WebhookControllerTest extends WebTestCase
             'CONTENT_TYPE' => 'application/json',
         ], json_encode(['commit_sha' => 'abc123']));
 
-        $this->assertResponseStatusCodeSame(401);
+        self::assertResponseStatusCodeSame(401);
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $this->assertSame('Unauthorized', $data['error']);
+        self::assertSame('Unauthorized', $data['error']);
     }
 
     public function testWebhookRejectsInvalidSecret(): void
@@ -33,10 +33,10 @@ class WebhookControllerTest extends WebTestCase
             'HTTP_X_WEBHOOK_SECRET' => 'wrong-secret',
         ], json_encode(['commit_sha' => 'abc123']));
 
-        $this->assertResponseStatusCodeSame(401);
+        self::assertResponseStatusCodeSame(401);
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $this->assertSame('Unauthorized', $data['error']);
+        self::assertSame('Unauthorized', $data['error']);
     }
 
     public function testWebhookAcceptsValidSecretAndCallsSync(): void
@@ -55,15 +55,13 @@ class WebhookControllerTest extends WebTestCase
         $syncService->expects($this->once())
             ->method('sync')
             ->willReturnCallback(function (
-                string $repoUrl,
-                string $targetDir,
                 string $commitSha,
                 string $commitUrl,
                 ?string $actionRunUrl,
             ) use ($syncLog): SyncLog {
-                $this->assertSame('abc123', $commitSha);
-                $this->assertSame('https://github.com/example/commit/abc123', $commitUrl);
-                $this->assertSame('https://github.com/example/actions/runs/1', $actionRunUrl);
+                self::assertSame('abc123', $commitSha);
+                self::assertSame('https://github.com/example/commit/abc123', $commitUrl);
+                self::assertSame('https://github.com/example/actions/runs/1', $actionRunUrl);
 
                 return $syncLog;
             });
@@ -80,12 +78,12 @@ class WebhookControllerTest extends WebTestCase
             'action_run_url' => 'https://github.com/example/actions/runs/1',
         ]));
 
-        $this->assertResponseStatusCodeSame(200);
+        self::assertResponseStatusCodeSame(200);
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $this->assertSame('success', $data['status']);
-        $this->assertSame(3, $data['skill_count']);
-        $this->assertNull($data['error']);
+        self::assertSame('success', $data['status']);
+        self::assertSame(3, $data['skill_count']);
+        self::assertNull($data['error']);
     }
 
     public function testWebhookReturns422OnSyncFailure(): void
@@ -111,12 +109,12 @@ class WebhookControllerTest extends WebTestCase
             'HTTP_X_WEBHOOK_SECRET' => 'test-secret',
         ], json_encode(['commit_sha' => 'abc123']));
 
-        $this->assertResponseStatusCodeSame(422);
+        self::assertResponseStatusCodeSame(422);
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $this->assertSame('failed', $data['status']);
-        $this->assertSame(0, $data['skill_count']);
-        $this->assertStringContainsString('Validation failed', $data['error']);
+        self::assertSame('failed', $data['status']);
+        self::assertSame(0, $data['skill_count']);
+        self::assertSame('Sync failed — check admin dashboard for details', $data['error']);
     }
 
     public function testWebhookRejectsGetMethod(): void
@@ -125,6 +123,6 @@ class WebhookControllerTest extends WebTestCase
 
         $client->request('GET', '/api/webhook/sync');
 
-        $this->assertResponseStatusCodeSame(405);
+        self::assertResponseStatusCodeSame(405);
     }
 }

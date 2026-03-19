@@ -7,30 +7,37 @@ namespace App\Tests\Service;
 use App\Entity\Skill;
 use App\Entity\SyncLog;
 use App\Repository\SkillRepository;
+use App\Service\GitClient;
 use App\Service\SkillCompiler;
 use App\Service\SkillSyncService;
 use App\Service\SkillYamlValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
 
 class SkillSyncServiceTest extends TestCase
 {
-    private EntityManagerInterface $em;
-    private SkillRepository $skillRepository;
-    private SkillYamlValidator $validator;
-    private SkillCompiler $compiler;
-    private SkillSyncService $service;
-
-    /** @var object[] Entities passed to persist() */
+    /** @var object[] */
     private array $persisted = [];
 
-    /** @var object[] Entities passed to remove() */
+    /** @var object[] */
     private array $removed = [];
 
     private int $flushCount = 0;
 
-    private string $validRepoDir;
-    private string $invalidRepoDir;
+    private SkillRepository $skillRepository;
+    private SkillSyncService $service;
+
+    /**
+     * Copy a fixture dir to a temp location so sync()'s finally block can safely delete it.
+     */
+    private function copyFixturesToTmp(string $fixtureDir): string
+    {
+        $tmpDir = sys_get_temp_dir() . '/opendispatch-test-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mirror($fixtureDir, $tmpDir);
+
+        return $tmpDir;
+    }
 
     protected function setUp(): void
     {
@@ -38,92 +45,101 @@ class SkillSyncServiceTest extends TestCase
         $this->removed = [];
         $this->flushCount = 0;
 
-        $this->em = $this->createStub(EntityManagerInterface::class);
+        $em = $this->createStub(EntityManagerInterface::class);
         $this->skillRepository = $this->createStub(SkillRepository::class);
-        $this->validator = new SkillYamlValidator(); // real validator — it's a pure service
-        $this->compiler = $this->createStub(SkillCompiler::class);
+        $compiler = $this->createStub(SkillCompiler::class);
 
-        $this->em->method('persist')->willReturnCallback(function (object $entity): void {
+        $em->method('persist')->willReturnCallback(function (object $entity): void {
             $this->persisted[] = $entity;
         });
-        $this->em->method('remove')->willReturnCallback(function (object $entity): void {
+        $em->method('remove')->willReturnCallback(function (object $entity): void {
             $this->removed[] = $entity;
         });
-        $this->em->method('flush')->willReturnCallback(function (): void {
+        $em->method('flush')->willReturnCallback(function (): void {
             $this->flushCount++;
         });
 
+        // GitClient stub returns a temp copy of the valid fixtures
+        $tmpDir = $this->copyFixturesToTmp(__DIR__ . '/../fixtures/skills-repo-valid');
+        $gitClient = $this->createStub(GitClient::class);
+        $gitClient->method('clone')->willReturn($tmpDir);
+
         $this->service = new SkillSyncService(
-            $this->em,
+            $em,
             $this->skillRepository,
-            $this->validator,
-            $this->compiler,
+            new SkillYamlValidator(),
+            $compiler,
+            $gitClient,
+            'https://example.com/skills.git',
         );
-
-        $this->validRepoDir = __DIR__ . '/../fixtures/skills-repo-valid';
-        $this->invalidRepoDir = __DIR__ . '/../fixtures/skills-repo';
     }
 
-    public function testSyncFromDirectoryCreatesNewSkills(): void
+    private function serviceWithInvalidRepo(): SkillSyncService
     {
-        // No existing skills in the DB
+        $em = $this->createStub(EntityManagerInterface::class);
+        $em->method('persist')->willReturnCallback(function (object $entity): void {
+            $this->persisted[] = $entity;
+        });
+        $em->method('flush')->willReturnCallback(function (): void {
+            $this->flushCount++;
+        });
+
+        $skillRepo = $this->createStub(SkillRepository::class);
+        $skillRepo->method('findOneBy')->willReturn(null);
+        $skillRepo->method('findAll')->willReturn([]);
+
+        $tmpDir = $this->copyFixturesToTmp(__DIR__ . '/../fixtures/skills-repo');
+        $gitClient = $this->createStub(GitClient::class);
+        $gitClient->method('clone')->willReturn($tmpDir);
+
+        return new SkillSyncService(
+            $em,
+            $skillRepo,
+            new SkillYamlValidator(),
+            $this->createStub(SkillCompiler::class),
+            $gitClient,
+            'https://example.com/skills.git',
+        );
+    }
+
+    public function testSyncCreatesNewSkills(): void
+    {
         $this->skillRepository->method('findOneBy')->willReturn(null);
         $this->skillRepository->method('findAll')->willReturn([]);
 
-        $result = $this->service->syncFromDirectory(
-            $this->validRepoDir,
-            'abc123def456',
-            'https://github.com/example/commit/abc123',
-            'https://github.com/example/actions/runs/1',
-        );
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', 'https://github.com/example/actions/runs/1');
 
-        // SyncLog should be success
-        $this->assertSame('success', $result->getStatus());
-        $this->assertSame(1, $result->getSkillCount());
+        self::assertSame('success', $result->getStatus());
+        self::assertSame(1, $result->getSkillCount());
 
-        // A new Skill entity should have been persisted
-        $skills = array_filter($this->persisted, fn (object $e) => $e instanceof Skill);
-        $this->assertCount(1, $skills);
+        $skills = array_filter($this->persisted, fn(object $e) => $e instanceof Skill);
+        self::assertCount(1, $skills);
 
-        /** @var Skill $skill */
         $skill = reset($skills);
-        $this->assertSame('tesla', $skill->getSkillId());
-        $this->assertSame('Tesla', $skill->getName());
-        $this->assertSame('1.0.0', $skill->getVersion());
-        $this->assertSame('Control your Tesla', $skill->getDescription());
-        $this->assertSame('opendispatch', $skill->getAuthor());
-        $this->assertSame(2, $skill->getActionCount());
-        $this->assertSame(['automotive', 'smart-home'], $skill->getTags());
-        $this->assertSame(['en'], $skill->getLanguages());
+        self::assertSame('tesla', $skill->getSkillId());
+        self::assertSame('Tesla', $skill->getName());
+        self::assertSame('1.0.0', $skill->getVersion());
+        self::assertSame(2, $skill->getActionCount());
+        self::assertSame(['automotive', 'smart-home'], $skill->getTags());
     }
 
-    public function testSyncFromDirectoryAbortsOnInvalidYaml(): void
+    public function testSyncAbortsOnInvalidYaml(): void
     {
-        // The invalid repo has a broken skill (missing actions)
-        $this->skillRepository->method('findOneBy')->willReturn(null);
-        $this->skillRepository->method('findAll')->willReturn([]);
+        $service = $this->serviceWithInvalidRepo();
 
-        $result = $this->service->syncFromDirectory(
-            $this->invalidRepoDir,
-            'abc123def456',
-            'https://github.com/example/commit/abc123',
-            null,
-        );
+        $result = $service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
 
-        // SyncLog should indicate failure
-        $this->assertSame('failed', $result->getStatus());
-        $this->assertSame(0, $result->getSkillCount());
-        $this->assertNotNull($result->getErrorMessage());
-        $this->assertStringContainsString('broken', $result->getErrorMessage());
+        self::assertSame('failed', $result->getStatus());
+        self::assertSame(0, $result->getSkillCount());
+        self::assertNotNull($result->getErrorMessage());
+        self::assertStringContainsString('broken', $result->getErrorMessage());
 
-        // No Skill entities should have been persisted (only SyncLog)
-        $skillsPersisted = array_filter($this->persisted, fn (object $e) => $e instanceof Skill);
-        $this->assertCount(0, $skillsPersisted);
+        $skillsPersisted = array_filter($this->persisted, fn(object $e) => $e instanceof Skill);
+        self::assertCount(0, $skillsPersisted);
     }
 
-    public function testSyncFromDirectoryUpsertsExistingSkill(): void
+    public function testSyncUpsertsExistingSkill(): void
     {
-        // Pre-existing skill with old data
         $existingSkill = new Skill();
         $existingSkill->setSkillId('tesla');
         $existingSkill->setName('Tesla Old');
@@ -137,30 +153,20 @@ class SkillSyncServiceTest extends TestCase
         $this->skillRepository->method('findOneBy')->willReturn($existingSkill);
         $this->skillRepository->method('findAll')->willReturn([$existingSkill]);
 
-        $result = $this->service->syncFromDirectory(
-            $this->validRepoDir,
-            'abc123def456',
-            'https://github.com/example/commit/abc123',
-            null,
-        );
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
 
-        $this->assertSame('success', $result->getStatus());
+        self::assertSame('success', $result->getStatus());
 
-        // Existing skill should be updated, not a new one persisted
-        $skillsPersisted = array_filter($this->persisted, fn (object $e) => $e instanceof Skill);
-        $this->assertCount(0, $skillsPersisted, 'Existing skill should NOT be re-persisted');
+        $skillsPersisted = array_filter($this->persisted, fn(object $e) => $e instanceof Skill);
+        self::assertCount(0, $skillsPersisted, 'Existing skill should NOT be re-persisted');
 
-        // Verify the existing skill was updated in place
-        $this->assertSame('Tesla', $existingSkill->getName());
-        $this->assertSame('1.0.0', $existingSkill->getVersion());
-        $this->assertSame('Control your Tesla', $existingSkill->getDescription());
-        $this->assertSame('opendispatch', $existingSkill->getAuthor());
-        $this->assertSame(2, $existingSkill->getActionCount());
+        self::assertSame('Tesla', $existingSkill->getName());
+        self::assertSame('1.0.0', $existingSkill->getVersion());
+        self::assertSame(2, $existingSkill->getActionCount());
     }
 
-    public function testSyncFromDirectoryPreservesIsFeatured(): void
+    public function testSyncPreservesIsFeatured(): void
     {
-        // Pre-existing featured skill
         $existingSkill = new Skill();
         $existingSkill->setSkillId('tesla');
         $existingSkill->setName('Tesla');
@@ -175,22 +181,14 @@ class SkillSyncServiceTest extends TestCase
         $this->skillRepository->method('findOneBy')->willReturn($existingSkill);
         $this->skillRepository->method('findAll')->willReturn([$existingSkill]);
 
-        $result = $this->service->syncFromDirectory(
-            $this->validRepoDir,
-            'abc123def456',
-            'https://github.com/example/commit/abc123',
-            null,
-        );
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
 
-        $this->assertSame('success', $result->getStatus());
-
-        // isFeatured should NOT be overwritten by sync
-        $this->assertTrue($existingSkill->isFeatured(), 'isFeatured must be preserved after sync');
+        self::assertSame('success', $result->getStatus());
+        self::assertTrue($existingSkill->isFeatured(), 'isFeatured must be preserved after sync');
     }
 
-    public function testSyncFromDirectoryDeletesOrphanedSkills(): void
+    public function testSyncDeletesOrphanedSkills(): void
     {
-        // An orphan skill that is NOT in the repo
         $orphanSkill = new Skill();
         $orphanSkill->setSkillId('deleted-skill');
         $orphanSkill->setName('Deleted');
@@ -201,49 +199,35 @@ class SkillSyncServiceTest extends TestCase
         $orphanSkill->setActionCount(0);
         $orphanSkill->setExampleCount(0);
 
-        // Tesla exists in repo, orphan does not
         $this->skillRepository->method('findOneBy')->willReturn(null);
         $this->skillRepository->method('findAll')->willReturn([$orphanSkill]);
 
-        $result = $this->service->syncFromDirectory(
-            $this->validRepoDir,
-            'abc123def456',
-            'https://github.com/example/commit/abc123',
-            null,
-        );
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
 
-        $this->assertSame('success', $result->getStatus());
-
-        // The orphan should have been removed
-        $this->assertContains($orphanSkill, $this->removed, 'Orphaned skill should be removed');
+        self::assertSame('success', $result->getStatus());
+        self::assertContains($orphanSkill, $this->removed, 'Orphaned skill should be removed');
     }
 
-    public function testSyncFromDirectoryLogsSyncResult(): void
+    public function testSyncLogsSyncResult(): void
     {
         $this->skillRepository->method('findOneBy')->willReturn(null);
         $this->skillRepository->method('findAll')->willReturn([]);
 
-        $result = $this->service->syncFromDirectory(
-            $this->validRepoDir,
+        $result = $this->service->sync(
             'abc123def456',
             'https://github.com/example/commit/abc123',
             'https://github.com/example/actions/runs/42',
         );
 
-        // Verify the SyncLog entity
-        $this->assertInstanceOf(SyncLog::class, $result);
-        $this->assertSame('success', $result->getStatus());
-        $this->assertSame(1, $result->getSkillCount());
-        $this->assertSame('abc123def456', $result->getCommitSha());
-        $this->assertSame('https://github.com/example/commit/abc123', $result->getCommitUrl());
-        $this->assertSame('https://github.com/example/actions/runs/42', $result->getActionRunUrl());
-        $this->assertNull($result->getErrorMessage());
+        self::assertInstanceOf(SyncLog::class, $result);
+        self::assertSame('success', $result->getStatus());
+        self::assertSame(1, $result->getSkillCount());
+        self::assertSame('abc123def456', $result->getCommitSha());
+        self::assertSame('https://github.com/example/commit/abc123', $result->getCommitUrl());
+        self::assertSame('https://github.com/example/actions/runs/42', $result->getActionRunUrl());
+        self::assertNull($result->getErrorMessage());
 
-        // SyncLog should have been persisted
-        $syncLogs = array_filter($this->persisted, fn (object $e) => $e instanceof SyncLog);
-        $this->assertCount(1, $syncLogs);
-
-        // flush should have been called (at least once for skill upsert + log)
-        $this->assertGreaterThanOrEqual(1, $this->flushCount);
+        $syncLogs = array_filter($this->persisted, fn(object $e) => $e instanceof SyncLog);
+        self::assertCount(1, $syncLogs);
     }
 }

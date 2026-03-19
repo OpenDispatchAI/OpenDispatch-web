@@ -31,10 +31,7 @@ class DashboardController extends AbstractController
     #[Route('/resync', name: 'app_admin_resync', methods: ['POST'])]
     public function resync(SkillSyncService $syncService): Response
     {
-        $repoUrl = $this->getParameter('app.skills_repo_url');
-        $repoDir = $this->getParameter('app.skills_repo_dir');
-
-        $result = $syncService->sync($repoUrl, $repoDir, 'manual', '', null);
+        $result = $syncService->sync('manual', '', null);
 
         if ($result->getStatus() === 'success') {
             $this->addFlash('success', "Synced {$result->getSkillCount()} skills.");

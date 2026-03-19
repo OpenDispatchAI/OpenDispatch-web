@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Service\SkillSyncService;
+use App\Trait\LoggerTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,11 +13,11 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class WebhookController extends AbstractController
 {
+    use LoggerTrait;
+
     public function __construct(
-        private SkillSyncService $syncService,
-        private string $webhookSecret,
-        private string $skillsRepoUrl,
-        private string $skillsRepoDir,
+        private readonly SkillSyncService $syncService,
+        private readonly string $webhookSecret,
     ) {}
 
     #[Route('/api/webhook/sync', name: 'api_webhook_sync', methods: ['POST'])]
@@ -24,20 +25,23 @@ class WebhookController extends AbstractController
     {
         $token = $request->headers->get('X-Webhook-Secret');
         if (!hash_equals($this->webhookSecret, $token ?? '')) {
+            $this->logger?->warning('Webhook auth failed', ['ip' => $request->getClientIp()]);
+
             return new JsonResponse(['error' => 'Unauthorized'], 401);
         }
 
-        $payload = json_decode($request->getContent(), true) ?? [];
-        $commitSha = $payload['commit_sha'] ?? 'unknown';
-        $commitUrl = $payload['commit_url'] ?? '';
-        $actionRunUrl = $payload['action_run_url'] ?? null;
+        try {
+            $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            $this->logger?->warning('Webhook received invalid JSON', ['ip' => $request->getClientIp()]);
+
+            return new JsonResponse(['error' => 'Invalid JSON payload'], 400);
+        }
 
         $syncLog = $this->syncService->sync(
-            $this->skillsRepoUrl,
-            $this->skillsRepoDir,
-            $commitSha,
-            $commitUrl,
-            $actionRunUrl,
+            $payload['commit_sha'] ?? 'unknown',
+            $payload['commit_url'] ?? '',
+            $payload['action_run_url'] ?? null,
         );
 
         $statusCode = $syncLog->getStatus() === 'success' ? 200 : 422;
@@ -45,7 +49,7 @@ class WebhookController extends AbstractController
         return new JsonResponse([
             'status' => $syncLog->getStatus(),
             'skill_count' => $syncLog->getSkillCount(),
-            'error' => $syncLog->getErrorMessage(),
+            'error' => $syncLog->getStatus() === 'failed' ? 'Sync failed — check admin dashboard for details' : null,
         ], $statusCode);
     }
 }

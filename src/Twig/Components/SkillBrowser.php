@@ -12,6 +12,9 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
 #[AsLiveComponent]
+/**
+ * @see templates/components/SkillBrowser.html.twig
+ */
 class SkillBrowser
 {
     use DefaultActionTrait;
@@ -25,7 +28,7 @@ class SkillBrowser
     #[LiveProp(writable: true, url: true)]
     public string $sort = 'name';
 
-    public function __construct(private SkillRepository $skillRepository) {}
+    public function __construct(private readonly SkillRepository $skillRepository) {}
 
     public function getSkills(): array
     {

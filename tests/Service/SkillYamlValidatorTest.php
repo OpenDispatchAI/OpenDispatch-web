@@ -21,7 +21,7 @@ class SkillYamlValidatorTest extends TestCase
         $allowedTags = ['automotive', 'smart-home', 'productivity', 'health', 'entertainment', 'communication', 'finance'];
         $errors = $this->validator->validate($this->validYaml, $allowedTags);
 
-        $this->assertSame([], $errors);
+        self::assertSame([], $errors);
     }
 
     public function testInvalidYamlSyntaxReturnsError(): void
@@ -29,8 +29,8 @@ class SkillYamlValidatorTest extends TestCase
         $brokenYaml = "skill_id: tesla\n  invalid: indentation\n: bad";
         $errors = $this->validator->validate($brokenYaml);
 
-        $this->assertNotEmpty($errors);
-        $this->assertStringContainsString('Invalid YAML syntax', $errors[0]);
+        self::assertNotEmpty($errors);
+        self::assertStringContainsString('Invalid YAML syntax', $errors[0]);
     }
 
     public function testMissingSkillIdReturnsError(): void
@@ -46,7 +46,7 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertContains('skill_id is required', $errors);
+        self::assertContains('skill_id is required', $errors);
     }
 
     public function testMissingNameReturnsError(): void
@@ -62,7 +62,7 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertContains('name is required', $errors);
+        self::assertContains('name is required', $errors);
     }
 
     public function testInvalidVersionReturnsError(): void
@@ -79,7 +79,7 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertContains('version must be valid semver (e.g. 1.0.0)', $errors);
+        self::assertContains('version must be valid semver (e.g. 1.0.0)', $errors);
     }
 
     public function testMissingActionsReturnsError(): void
@@ -92,7 +92,7 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertContains('actions must be a non-empty array', $errors);
+        self::assertContains('actions must be a non-empty array', $errors);
     }
 
     public function testActionWithoutIdReturnsError(): void
@@ -109,8 +109,8 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertNotEmpty($errors);
-        $this->assertStringContainsString('id is required', $errors[0]);
+        self::assertNotEmpty($errors);
+        self::assertStringContainsString('id is required', $errors[0]);
     }
 
     public function testActionIdPatternEnforced(): void
@@ -127,8 +127,8 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertNotEmpty($errors);
-        $this->assertStringContainsString('id must match pattern', $errors[0]);
+        self::assertNotEmpty($errors);
+        self::assertStringContainsString('id must match pattern', $errors[0]);
     }
 
     public function testActionIdWithMultipleSegmentsIsValid(): void
@@ -146,7 +146,7 @@ YAML;
         $errors = $this->validator->validate($yaml);
 
         // Should have no errors related to action id
-        $this->assertEmpty(
+        self::assertEmpty(
             array_filter($errors, fn (string $e) => str_contains($e, 'id must match pattern')),
             'Multi-segment action id should not trigger pattern error',
         );
@@ -165,8 +165,8 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertNotEmpty($errors);
-        $this->assertStringContainsString('must have at least one example', $errors[0]);
+        self::assertNotEmpty($errors);
+        self::assertStringContainsString('must have at least one example', $errors[0]);
     }
 
     public function testBridgeShortcutWithoutShareUrlReturnsError(): void
@@ -185,7 +185,7 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        $this->assertContains('bridge_shortcut.share_url is required when bridge_shortcut is set', $errors);
+        self::assertContains('bridge_shortcut.share_url is required when bridge_shortcut is set', $errors);
     }
 
     public function testDisallowedTagReturnsError(): void
@@ -206,7 +206,7 @@ YAML;
         $allowedTags = ['automotive', 'smart-home'];
         $errors = $this->validator->validate($yaml, $allowedTags);
 
-        $this->assertContains("Tag 'nonexistent-tag' is not in the allowed tags list", $errors);
+        self::assertContains("Tag 'nonexistent-tag' is not in the allowed tags list", $errors);
     }
 
     public function testAllowedTagsPassValidation(): void
@@ -228,7 +228,7 @@ YAML;
         $errors = $this->validator->validate($yaml, $allowedTags);
 
         // No tag-related errors
-        $this->assertEmpty(
+        self::assertEmpty(
             array_filter($errors, fn (string $e) => str_contains($e, 'not in the allowed tags list')),
             'Allowed tags should not trigger tag validation errors',
         );
@@ -251,7 +251,7 @@ YAML;
         // Empty allowedTags means no tag validation
         $errors = $this->validator->validate($yaml, []);
 
-        $this->assertEmpty(
+        self::assertEmpty(
             array_filter($errors, fn (string $e) => str_contains($e, 'not in the allowed tags list')),
             'Empty allowedTags should skip tag validation entirely',
         );

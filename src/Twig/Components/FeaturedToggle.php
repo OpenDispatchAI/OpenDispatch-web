@@ -12,6 +12,9 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
 #[AsLiveComponent]
+/**
+ * @see templates/components/FeaturedToggle.html.twig
+ */
 class FeaturedToggle
 {
     use DefaultActionTrait;
@@ -19,7 +22,7 @@ class FeaturedToggle
     #[LiveProp]
     public Skill $skill;
 
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(private readonly EntityManagerInterface $em) {}
 
     #[LiveAction]
     public function toggle(): void

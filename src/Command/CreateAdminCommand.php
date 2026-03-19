@@ -20,8 +20,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class CreateAdminCommand extends Command
 {
     public function __construct(
-        private EntityManagerInterface $em,
-        private UserPasswordHasherInterface $passwordHasher,
+        private readonly EntityManagerInterface $em,
+        private readonly UserPasswordHasherInterface $passwordHasher,
     ) {
         parent::__construct();
     }

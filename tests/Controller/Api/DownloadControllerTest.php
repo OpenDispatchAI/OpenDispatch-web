@@ -41,10 +41,10 @@ class DownloadControllerTest extends WebTestCase
     {
         $this->client->request('GET', '/api/v1/skills/tesla/download');
 
-        $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('text/yaml', $this->client->getResponse()->headers->get('Content-Type'));
-        $this->assertResponseHeaderSame('Content-Disposition', 'attachment; filename="skill.yaml"');
-        $this->assertStringContainsString('skill_id: tesla', $this->client->getResponse()->getContent());
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('text/yaml', $this->client->getResponse()->headers->get('Content-Type'));
+        self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename="skill.yaml"');
+        self::assertStringContainsString('skill_id: tesla', $this->client->getResponse()->getContent());
     }
 
     public function testDownloadCreatesSkillDownloadRecord(): void
@@ -53,11 +53,11 @@ class DownloadControllerTest extends WebTestCase
             'HTTP_X_OPENDISPATCH_VERSION' => '1.2.0',
         ]);
 
-        $this->assertResponseIsSuccessful();
+        self::assertResponseIsSuccessful();
 
         $downloads = $this->em->getRepository(SkillDownload::class)->findAll();
-        $this->assertCount(1, $downloads);
-        $this->assertSame('1.2.0', $downloads[0]->getAppVersion());
+        self::assertCount(1, $downloads);
+        self::assertSame('1.2.0', $downloads[0]->getAppVersion());
     }
 
     public function testDownloadWithoutVersionHeaderStoresNull(): void
@@ -65,13 +65,13 @@ class DownloadControllerTest extends WebTestCase
         $this->client->request('GET', '/api/v1/skills/tesla/download');
 
         $downloads = $this->em->getRepository(SkillDownload::class)->findAll();
-        $this->assertCount(1, $downloads);
-        $this->assertNull($downloads[0]->getAppVersion());
+        self::assertCount(1, $downloads);
+        self::assertNull($downloads[0]->getAppVersion());
     }
 
     public function testDownloadReturns404ForUnknownSkill(): void
     {
         $this->client->request('GET', '/api/v1/skills/nonexistent/download');
-        $this->assertResponseStatusCodeSame(404);
+        self::assertResponseStatusCodeSame(404);
     }
 }

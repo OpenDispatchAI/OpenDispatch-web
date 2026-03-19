@@ -7,43 +7,66 @@ namespace App\Service;
 use App\Entity\Skill;
 use App\Entity\SyncLog;
 use App\Repository\SkillRepository;
+use App\Trait\LoggerTrait;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillSyncService
 {
+    use LoggerTrait;
+
     public function __construct(
-        private EntityManagerInterface $em,
-        private SkillRepository $skillRepository,
-        private SkillYamlValidator $validator,
-        private SkillCompiler $compiler,
+        private readonly EntityManagerInterface $em,
+        private readonly SkillRepository $skillRepository,
+        private readonly SkillYamlValidator $validator,
+        private readonly SkillCompiler $compiler,
+        private readonly GitClient $gitClient,
+        private readonly string $skillsRepoUrl,
     ) {}
 
-    /**
-     * Sync from a local directory containing the skills repo.
-     */
-    public function syncFromDirectory(
+    public function sync(
+        string $commitSha,
+        string $commitUrl,
+        ?string $actionRunUrl,
+    ): SyncLog {
+        $this->logger?->info('Starting sync', ['commitSha' => $commitSha]);
+
+        // 1. Clone repo to temp dir
+        $repoDir = $this->gitClient->clone($this->skillsRepoUrl);
+
+        try {
+            return $this->processRepo($repoDir, $commitSha, $commitUrl, $actionRunUrl);
+        } finally {
+            (new Filesystem())->remove($repoDir);
+        }
+    }
+
+    private function processRepo(
         string $repoDir,
         string $commitSha,
         string $commitUrl,
         ?string $actionRunUrl,
     ): SyncLog {
-        // 1. Read allowed tags
+        // 2. Read allowed tags
         $allowedTags = $this->readAllowedTags($repoDir);
 
-        // 2. Find all skill YAMLs
+        // 3. Find all skill YAMLs
         $skillDirs = glob($repoDir . '/skills/*/skill.yaml') ?: [];
 
-        // 3. Validate ALL before making any changes
+        // 4. Validate ALL before making any changes
         $parsedSkills = [];
         foreach ($skillDirs as $yamlPath) {
             $yamlContent = file_get_contents($yamlPath);
             $errors = $this->validator->validate($yamlContent, $allowedTags);
 
             if (!empty($errors)) {
+                $skillDir = basename(dirname($yamlPath));
+                $this->logger?->warning('Sync aborted: validation failed', ['skill' => $skillDir, 'errors' => $errors]);
+
                 return $this->logResult(
                     'failed', 0, $commitSha, $commitUrl, $actionRunUrl,
-                    'Validation failed for ' . basename(dirname($yamlPath)) . ': ' . implode('; ', $errors)
+                    'Validation failed for ' . $skillDir . ': ' . implode('; ', $errors)
                 );
             }
 
@@ -57,7 +80,7 @@ class SkillSyncService
             ];
         }
 
-        // 4. All valid — upsert
+        // 5. All valid — upsert
         $syncedIds = [];
         foreach ($parsedSkills as $parsed) {
             $skillId = $parsed['data']['skill_id'];
@@ -78,7 +101,7 @@ class SkillSyncService
             $syncedIds[] = $skillId;
         }
 
-        // 5. Delete orphans
+        // 6. Delete orphans
         foreach ($this->skillRepository->findAll() as $existing) {
             if (!in_array($existing->getSkillId(), $syncedIds, true)) {
                 $this->em->remove($existing);
@@ -87,30 +110,13 @@ class SkillSyncService
 
         $this->em->flush();
 
-        // 6. Compile static files
+        // 7. Compile static files
         $this->compiler->compile();
 
-        // 7. Log success
+        // 8. Log success
+        $this->logger?->info('Sync completed', ['skillCount' => count($parsedSkills), 'commitSha' => $commitSha]);
+
         return $this->logResult('success', count($parsedSkills), $commitSha, $commitUrl, $actionRunUrl);
-    }
-
-    /**
-     * Full sync: clone/pull repo, then syncFromDirectory.
-     */
-    public function sync(
-        string $repoUrl,
-        string $targetDir,
-        string $commitSha,
-        string $commitUrl,
-        ?string $actionRunUrl,
-    ): SyncLog {
-        if (is_dir($targetDir . '/.git')) {
-            $this->exec("git -C " . escapeshellarg($targetDir) . " fetch origin main && git -C " . escapeshellarg($targetDir) . " reset --hard origin/main");
-        } else {
-            $this->exec("git clone --depth 1 --branch main " . escapeshellarg($repoUrl) . " " . escapeshellarg($targetDir));
-        }
-
-        return $this->syncFromDirectory($targetDir, $commitSha, $commitUrl, $actionRunUrl);
     }
 
     private function readAllowedTags(string $repoDir): array
@@ -122,14 +128,6 @@ class SkillSyncService
         $data = Yaml::parseFile($tagsFile);
 
         return $data['tags'] ?? [];
-    }
-
-    private function exec(string $command): void
-    {
-        exec($command . ' 2>&1', $output, $exitCode);
-        if ($exitCode !== 0) {
-            throw new \RuntimeException("Command failed ({$exitCode}): " . implode("\n", $output));
-        }
     }
 
     private function logResult(

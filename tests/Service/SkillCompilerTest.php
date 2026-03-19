@@ -41,30 +41,30 @@ class SkillCompilerTest extends TestCase
         $this->compiler->compile();
 
         $indexPath = $this->publicDir . '/api/v1/index.json';
-        $this->assertFileExists($indexPath);
+        self::assertFileExists($indexPath);
 
         $index = json_decode(file_get_contents($indexPath), true);
 
-        $this->assertSame(1, $index['version']);
-        $this->assertSame(1, $index['skill_count']);
-        $this->assertArrayHasKey('generated_at', $index);
-        $this->assertCount(1, $index['skills']);
+        self::assertSame(1, $index['version']);
+        self::assertSame(1, $index['skill_count']);
+        self::assertArrayHasKey('generated_at', $index);
+        self::assertCount(1, $index['skills']);
 
         $entry = $index['skills'][0];
-        $this->assertSame('tesla', $entry['skill_id']);
-        $this->assertSame('Tesla', $entry['name']);
-        $this->assertSame('1.0.0', $entry['version']);
-        $this->assertSame('Control your Tesla', $entry['description']);
-        $this->assertSame('opendispatch', $entry['author']);
-        $this->assertSame('https://opendispatch.ai', $entry['author_url']);
-        $this->assertSame(2, $entry['action_count']);
-        $this->assertSame(['test-tag'], $entry['tags']);
-        $this->assertSame(['en'], $entry['languages']);
-        $this->assertSame('/api/v1/skills/tesla/download', $entry['download_url']);
-        $this->assertNull($entry['icon_url']);
-        $this->assertArrayHasKey('example_count', $entry);
-        $this->assertArrayHasKey('created_at', $entry);
-        $this->assertArrayHasKey('updated_at', $entry);
+        self::assertSame('tesla', $entry['skill_id']);
+        self::assertSame('Tesla', $entry['name']);
+        self::assertSame('1.0.0', $entry['version']);
+        self::assertSame('Control your Tesla', $entry['description']);
+        self::assertSame('opendispatch', $entry['author']);
+        self::assertSame('https://opendispatch.ai', $entry['author_url']);
+        self::assertSame(2, $entry['action_count']);
+        self::assertSame(['test-tag'], $entry['tags']);
+        self::assertSame(['en'], $entry['languages']);
+        self::assertSame('/api/v1/skills/tesla/download', $entry['download_url']);
+        self::assertNull($entry['icon_url']);
+        self::assertArrayHasKey('example_count', $entry);
+        self::assertArrayHasKey('created_at', $entry);
+        self::assertArrayHasKey('updated_at', $entry);
     }
 
     public function testCompileCreatesSkillYaml(): void
@@ -76,8 +76,8 @@ class SkillCompilerTest extends TestCase
         $this->compiler->compile();
 
         $yamlPath = $this->publicDir . '/api/v1/skills/tesla/skill.yaml';
-        $this->assertFileExists($yamlPath);
-        $this->assertSame($this->fixtureYaml, file_get_contents($yamlPath));
+        self::assertFileExists($yamlPath);
+        self::assertSame($this->fixtureYaml, file_get_contents($yamlPath));
     }
 
     public function testCompileCreatesInfoJson(): void
@@ -89,26 +89,26 @@ class SkillCompilerTest extends TestCase
         $this->compiler->compile();
 
         $infoPath = $this->publicDir . '/api/v1/skills/tesla/info.json';
-        $this->assertFileExists($infoPath);
+        self::assertFileExists($infoPath);
 
         $info = json_decode(file_get_contents($infoPath), true);
 
-        $this->assertSame('tesla', $info['skill_id']);
-        $this->assertSame('Tesla', $info['name']);
-        $this->assertCount(2, $info['actions']);
+        self::assertSame('tesla', $info['skill_id']);
+        self::assertSame('Tesla', $info['name']);
+        self::assertCount(2, $info['actions']);
 
         $firstAction = $info['actions'][0];
-        $this->assertSame('vehicle.unlock', $firstAction['id']);
-        $this->assertSame('Unlock', $firstAction['title']);
-        $this->assertSame('Unlock the car doors', $firstAction['description']);
-        $this->assertSame(2, $firstAction['example_count']);
-        $this->assertFalse($firstAction['has_parameters']);
+        self::assertSame('vehicle.unlock', $firstAction['id']);
+        self::assertSame('Unlock', $firstAction['title']);
+        self::assertSame('Unlock the car doors', $firstAction['description']);
+        self::assertSame(2, $firstAction['example_count']);
+        self::assertFalse($firstAction['has_parameters']);
 
         $secondAction = $info['actions'][1];
-        $this->assertSame('vehicle.climate.set_temperature', $secondAction['id']);
-        $this->assertSame('Set Temperature', $secondAction['title']);
-        $this->assertSame(1, $secondAction['example_count']);
-        $this->assertTrue($secondAction['has_parameters']);
+        self::assertSame('vehicle.climate.set_temperature', $secondAction['id']);
+        self::assertSame('Set Temperature', $secondAction['title']);
+        self::assertSame(1, $secondAction['example_count']);
+        self::assertTrue($secondAction['has_parameters']);
     }
 
     public function testCompileRemovesOrphanedSkillFiles(): void
@@ -124,8 +124,8 @@ class SkillCompilerTest extends TestCase
 
         $this->compiler->compile();
 
-        $this->assertDirectoryDoesNotExist($orphanDir);
-        $this->assertDirectoryExists($this->publicDir . '/api/v1/skills/tesla');
+        self::assertDirectoryDoesNotExist($orphanDir);
+        self::assertDirectoryExists($this->publicDir . '/api/v1/skills/tesla');
     }
 
     public function testCompileWithEmptySkillListCreatesEmptyIndex(): void
@@ -135,13 +135,13 @@ class SkillCompilerTest extends TestCase
         $this->compiler->compile();
 
         $indexPath = $this->publicDir . '/api/v1/index.json';
-        $this->assertFileExists($indexPath);
+        self::assertFileExists($indexPath);
 
         $index = json_decode(file_get_contents($indexPath), true);
 
-        $this->assertSame(1, $index['version']);
-        $this->assertSame(0, $index['skill_count']);
-        $this->assertSame([], $index['skills']);
+        self::assertSame(1, $index['version']);
+        self::assertSame(0, $index['skill_count']);
+        self::assertSame([], $index['skills']);
     }
 
     private function createSkill(string $skillId, string $yamlContent): Skill
