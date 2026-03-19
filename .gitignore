@@ -1,3 +1,8 @@
+# Jetbrains
+.idea/
+
+# macOS
+.DS_Store
 
 ###> symfony/framework-bundle ###
 /.env.local
@@ -12,6 +17,7 @@
 ###> phpunit/phpunit ###
 /phpunit.xml
 /.phpunit.cache/
+.phpunit.result.cache
 ###< phpunit/phpunit ###
 
 ###> symfony/asset-mapper ###
