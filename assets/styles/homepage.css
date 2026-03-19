@@ -409,3 +409,140 @@ body.homepage .site-nav-links a:hover { color: #f5f5f7; text-decoration: none; }
     0%, 100% { transform: translateX(-50%) translateY(0); }
     50% { transform: translateX(-50%) translateY(6px); }
 }
+
+/* --- Ecosystem Section (Act 5) --- */
+.ecosystem-section {
+    position: relative;
+    padding: 8rem 2rem 6rem;
+    text-align: center;
+    background: #000;
+}
+
+.ecosystem-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.ecosystem-title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0.65));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ecosystem-subtitle {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 4rem;
+}
+
+.skill-showcase {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+.showcase-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 2rem 1.25rem 1.75rem;
+    transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+}
+
+.showcase-card:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.showcase-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.showcase-icon--tesla    { background: rgba(232, 33, 39, 0.12); color: #e82127; }
+.showcase-icon--calendar { background: rgba(255, 59, 48, 0.12); color: #ff3b30; }
+.showcase-icon--ticktick { background: rgba(78, 128, 238, 0.12); color: #4e80ee; }
+.showcase-icon--hue      { background: rgba(255, 183, 0, 0.12); color: #ffb700; }
+.showcase-icon--teams    { background: rgba(98, 100, 167, 0.12); color: #6264a7; }
+
+.showcase-card h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #f5f5f7;
+    margin-bottom: 0.375rem;
+}
+
+.showcase-command {
+    font-size: 0.8125rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.browse-link {
+    display: inline-block;
+    font-size: 1.0625rem;
+    color: #2997ff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.browse-link:hover {
+    color: #6cb4ff;
+    text-decoration: none;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    .skill-showcase {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .iphone {
+        transform: scale(0.82);
+    }
+
+    .act-1-text { bottom: 8%; }
+    .act-2-text, .act-3-text { bottom: 10%; }
+    .act-4-text { bottom: 4%; }
+
+    .skill-showcase {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .showcase-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .ecosystem-section {
+        padding: 5rem 1.25rem 4rem;
+    }
+
+    .tesla-trunk {
+        width: 240px;
+    }
+
+    .action-arrow {
+        display: none;
+    }
+}
