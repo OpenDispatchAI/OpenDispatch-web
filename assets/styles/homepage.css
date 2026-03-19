@@ -6,6 +6,7 @@
 .iphone-wrapper {
     position: relative;
     z-index: 10;
+    transform: translateY(-6vh);
 }
 
 .iphone {
@@ -278,10 +279,10 @@ body.homepage .site-nav-links a:hover { color: #f5f5f7; text-decoration: none; }
 }
 
 /* Position text below the phone */
-.act-1-text { bottom: 12%; }
-.act-2-text { bottom: 14%; }
-.act-3-text { bottom: 14%; }
-.act-4-text { bottom: 6%; }
+.act-1-text { bottom: 8%; }
+.act-2-text { bottom: 10%; }
+.act-3-text { bottom: 10%; }
+.act-4-text { bottom: 4%; }
 
 /* Show current act's text */
 [data-act="1"] .act-1-text,
