@@ -4,7 +4,7 @@
 
 {% block body %}
 <div class="login-container">
-    <h1>OpenDispatch Admin</h1>
+    <h1>OpenDispatch</h1>
 
     {% if error %}
         <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
@@ -19,7 +19,7 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="_password" required>
         </div>
-        <button type="submit">Log in</button>
+        <button type="submit" class="btn btn-primary" style="width:100%">Log in</button>
     </form>
 </div>
 {% endblock %}
