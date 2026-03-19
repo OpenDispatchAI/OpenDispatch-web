@@ -25,3 +25,14 @@ services:
     App\Service\SkillCompiler:
         arguments:
             $publicDir: '%kernel.project_dir%/public'
+
+    App\Controller\Api\WebhookController:
+        arguments:
+            $webhookSecret: '%env(WEBHOOK_SECRET)%'
+            $skillsRepoUrl: '%env(SKILLS_REPO_URL)%'
+            $skillsRepoDir: '%kernel.project_dir%/var/skills-repo'
+
+    App\Command\SyncCommand:
+        arguments:
+            $skillsRepoUrl: '%env(SKILLS_REPO_URL)%'
+            $skillsRepoDir: '%kernel.project_dir%/var/skills-repo'
