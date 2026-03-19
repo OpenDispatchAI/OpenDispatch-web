@@ -56,12 +56,14 @@
 }
 
 .iphone-action-btn {
-    left: -3px;
+    left: -4px;
     top: 110px;
-    width: 3px;
-    height: 30px;
-    border-radius: 2px 0 0 2px;
+    width: 4px;
+    height: 32px;
+    border-radius: 3px 0 0 3px;
     z-index: 5;
+    background: #48484a;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .iphone-vol-up {
@@ -91,8 +93,8 @@
 /* --- Action Button Glow + Arrow --- */
 .action-arrow {
     position: absolute;
-    left: -44px;
-    top: 113px;
+    left: -52px;
+    top: 111px;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -101,21 +103,21 @@
 }
 
 .action-arrow svg {
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     fill: none;
-    stroke: #2563eb;
-    stroke-width: 2;
+    stroke: #4b8af5;
+    stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
-    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.5));
+    filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.6));
 }
 
 .action-btn-glow {
     position: absolute;
-    inset: -6px;
-    border-radius: 4px 0 0 4px;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.4), transparent 70%);
+    inset: -12px -8px -12px -14px;
+    border-radius: 8px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.5), transparent 65%);
     animation: glow-pulse 2.5s ease-in-out infinite;
     transition: opacity 0.4s ease;
 }
@@ -335,13 +337,15 @@ body.homepage .site-nav-links a:hover { color: #f5f5f7; text-decoration: none; }
 
 /* Action button press effect */
 [data-act="2"] .iphone-action-btn {
-    background: #2a2a2c;
-    box-shadow: inset 0 0 4px rgba(37, 99, 235, 0.3);
+    background: #2563eb;
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
+    width: 3px;
 }
 
-/* --- Act 3: Listening --- */
+/* --- Act 3: Listening + scroll-driven text reveal --- */
 .speech-bubble {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     font-size: clamp(1.1rem, 2vw, 1.5rem);
     font-weight: 300;
     font-style: italic;
@@ -350,6 +354,27 @@ body.homepage .site-nav-links a:hover { color: #f5f5f7; text-decoration: none; }
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
     background: rgba(255, 255, 255, 0.02);
+}
+
+.speech-text {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: calc(clamp(0, var(--act-3, 0) * 1.4, 1) * 22ch);
+}
+
+.speech-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background: rgba(255, 255, 255, 0.5);
+    margin-left: 2px;
+    animation: cursor-blink 0.7s step-end infinite;
+}
+
+@keyframes cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
 
 /* --- Act 4: It Happens --- */
