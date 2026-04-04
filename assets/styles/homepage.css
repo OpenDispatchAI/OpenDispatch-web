@@ -1,0 +1,576 @@
+/* ==============================================
+   OpenDispatch Homepage — Parallax Showcase
+   ============================================== */
+
+/* --- iPhone 15 Pro Mockup --- */
+.iphone-wrapper {
+    position: relative;
+    z-index: 10;
+    transform: translateY(-6vh);
+}
+
+.iphone {
+    position: relative;
+    width: 280px;
+    height: 572px;
+    background: #1c1c1e;
+    border-radius: 52px;
+    border: 2.5px solid #3a3a3c;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 0 0 1px rgba(0, 0, 0, 0.3),
+        0 20px 60px -10px rgba(0, 0, 0, 0.7),
+        0 40px 100px -20px rgba(0, 0, 0, 0.5);
+}
+
+.iphone-screen {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background: #000;
+    border-radius: 46px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iphone-dynamic-island {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 34px;
+    background: #000;
+    border-radius: 17px;
+    z-index: 10;
+}
+
+/* --- Side Buttons --- */
+.iphone-btn {
+    position: absolute;
+    background: #3a3a3c;
+}
+
+.iphone-action-btn {
+    left: -4px;
+    top: 110px;
+    width: 4px;
+    height: 32px;
+    border-radius: 3px 0 0 3px;
+    z-index: 5;
+    background: #48484a;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.iphone-vol-up {
+    left: -3px;
+    top: 158px;
+    width: 3px;
+    height: 30px;
+    border-radius: 2px 0 0 2px;
+}
+
+.iphone-vol-down {
+    left: -3px;
+    top: 196px;
+    width: 3px;
+    height: 30px;
+    border-radius: 2px 0 0 2px;
+}
+
+.iphone-power {
+    right: -3px;
+    top: 158px;
+    width: 3px;
+    height: 48px;
+    border-radius: 0 2px 2px 0;
+}
+
+/* --- Action Button Glow + Arrow --- */
+.action-arrow {
+    position: absolute;
+    left: -52px;
+    top: 111px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    animation: arrow-pulse 2.5s ease-in-out infinite;
+    transition: opacity 0.4s ease;
+}
+
+.action-arrow svg {
+    width: 28px;
+    height: 28px;
+    fill: none;
+    stroke: #4b8af5;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.6));
+}
+
+.action-btn-glow {
+    position: absolute;
+    inset: -12px -8px -12px -14px;
+    border-radius: 8px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.5), transparent 65%);
+    animation: glow-pulse 2.5s ease-in-out infinite;
+    transition: opacity 0.4s ease;
+}
+
+@keyframes arrow-pulse {
+    0%, 100% { opacity: 0.4; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(4px); }
+}
+
+@keyframes glow-pulse {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.8; }
+}
+
+/* --- Screen States --- */
+.screen-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+/* Screen off: subtle sheen */
+.screen-off {
+    opacity: 1;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.01) 0%,
+        rgba(255, 255, 255, 0.03) 50%,
+        rgba(255, 255, 255, 0.01) 100%
+    );
+}
+
+/* Screen wake: radial glow */
+.screen-wake {
+    background: radial-gradient(
+        circle at center,
+        rgba(37, 99, 235, 0.12) 0%,
+        rgba(37, 99, 235, 0.04) 40%,
+        transparent 70%
+    );
+}
+
+/* Listening: concentric rings */
+.screen-listen {
+    flex-direction: column;
+}
+
+.listen-ring {
+    position: absolute;
+    border: 1.5px solid rgba(37, 99, 235, 0.4);
+    border-radius: 50%;
+    animation: ring-expand 2.2s ease-out infinite;
+}
+
+.listen-ring:nth-child(1) { width: 50px; height: 50px; animation-delay: 0s; }
+.listen-ring:nth-child(2) { width: 90px; height: 90px; animation-delay: 0.35s; }
+.listen-ring:nth-child(3) { width: 130px; height: 130px; animation-delay: 0.7s; }
+
+@keyframes ring-expand {
+    0% { transform: scale(0.8); opacity: 0.7; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Result card */
+.screen-result {
+    flex-direction: column;
+}
+
+.result-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px 32px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.result-icon {
+    width: 44px;
+    height: 44px;
+    background: #16a34a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 20px;
+    color: white;
+}
+
+.result-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: #f5f5f7;
+    margin-bottom: 2px;
+}
+
+.result-action {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* --- Dark Theme Override (homepage only) --- */
+body.homepage {
+    background: #000;
+    color: #f5f5f7;
+    overflow-x: hidden;
+}
+
+body.homepage .site-nav {
+    background: transparent;
+    border-bottom: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+body.homepage .site-nav-brand { color: #f5f5f7; }
+body.homepage .site-nav-links a { color: rgba(255, 255, 255, 0.5); }
+body.homepage .site-nav-links a:hover { color: #f5f5f7; text-decoration: none; }
+
+/* --- Homepage Wrapper --- */
+.homepage {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* --- Parallax Track --- */
+.parallax-track {
+    position: relative;
+    height: 400vh;
+}
+
+.parallax-viewport {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* --- Act Text Overlays --- */
+.act-text {
+    position: absolute;
+    text-align: center;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+}
+
+/* Position text below the phone */
+.act-1-text { bottom: 8%; }
+.act-2-text { bottom: 10%; }
+.act-3-text { bottom: 10%; }
+.act-4-text { bottom: 4%; }
+
+/* Show current act's text */
+[data-act="1"] .act-1-text,
+[data-act="2"] .act-2-text,
+[data-act="3"] .act-3-text,
+[data-act="4"] .act-4-text {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- Act 1: Hero --- */
+.hero-title {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0.65));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-tagline {
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.45);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Show action arrow only in Act 1 */
+[data-act="1"] .action-arrow { opacity: 1; }
+[data-act="2"] .action-arrow,
+[data-act="3"] .action-arrow,
+[data-act="4"] .action-arrow { opacity: 0; transition: opacity 0.3s ease; }
+
+/* Show action button glow only in Acts 1-2 */
+[data-act="3"] .action-btn-glow,
+[data-act="4"] .action-btn-glow { opacity: 0; }
+
+/* --- Act 2: The Press --- */
+.act-caption {
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Action button press effect */
+[data-act="2"] .iphone-action-btn {
+    background: #2563eb;
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
+    width: 3px;
+}
+
+/* --- Act 3: Listening + scroll-driven text reveal --- */
+.speech-bubble {
+    display: inline-flex;
+    align-items: center;
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0.875rem 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.speech-text {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: calc(clamp(0, var(--act-3, 0) * 1.4, 1) * 22ch);
+}
+
+.speech-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background: rgba(255, 255, 255, 0.5);
+    margin-left: 2px;
+    animation: cursor-blink 0.7s step-end infinite;
+}
+
+@keyframes cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* --- Act 4: It Happens --- */
+.tesla-trunk {
+    width: 320px;
+    max-width: 80vw;
+    margin: 0 auto;
+}
+
+.tesla-svg {
+    width: 100%;
+    height: auto;
+}
+
+/* Trunk lid opens in Act 4 */
+.trunk-lid {
+    transform-origin: 160px 52px;
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-act="4"] .trunk-lid {
+    transform: rotate(-35deg);
+}
+
+/* --- Screen State Transitions --- */
+[data-act="1"] .screen-off    { opacity: 1; }
+[data-act="1"] .screen-wake   { opacity: 0; }
+[data-act="1"] .screen-listen { opacity: 0; }
+[data-act="1"] .screen-result { opacity: 0; }
+
+[data-act="2"] .screen-off    { opacity: 0; }
+[data-act="2"] .screen-wake   { opacity: 1; }
+[data-act="2"] .screen-listen { opacity: 0; }
+[data-act="2"] .screen-result { opacity: 0; }
+
+[data-act="3"] .screen-off    { opacity: 0; }
+[data-act="3"] .screen-wake   { opacity: 0; }
+[data-act="3"] .screen-listen { opacity: 1; }
+[data-act="3"] .screen-result { opacity: 0; }
+
+[data-act="4"] .screen-off    { opacity: 0; }
+[data-act="4"] .screen-wake   { opacity: 0; }
+[data-act="4"] .screen-listen { opacity: 0; }
+[data-act="4"] .screen-result { opacity: 1; }
+
+/* --- Scroll Indicator --- */
+.scroll-indicator {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    animation: scroll-bob 2s ease-in-out infinite;
+}
+
+[data-act="1"] .scroll-indicator { opacity: 1; }
+
+@keyframes scroll-bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+}
+
+/* --- Ecosystem Section (Act 5) --- */
+.ecosystem-section {
+    position: relative;
+    padding: 8rem 2rem 6rem;
+    text-align: center;
+    background: #000;
+}
+
+.ecosystem-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.ecosystem-title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0.65));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ecosystem-subtitle {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 4rem;
+}
+
+.skill-showcase {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+.showcase-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 2rem 1.25rem 1.75rem;
+    transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+}
+
+.showcase-card:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.showcase-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.showcase-icon--tesla    { background: rgba(232, 33, 39, 0.12); color: #e82127; }
+.showcase-icon--calendar { background: rgba(255, 59, 48, 0.12); color: #ff3b30; }
+.showcase-icon--ticktick { background: rgba(78, 128, 238, 0.12); color: #4e80ee; }
+.showcase-icon--hue      { background: rgba(255, 183, 0, 0.12); color: #ffb700; }
+.showcase-icon--teams    { background: rgba(98, 100, 167, 0.12); color: #6264a7; }
+
+.showcase-card h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #f5f5f7;
+    margin-bottom: 0.375rem;
+}
+
+.showcase-command {
+    font-size: 0.8125rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.browse-link {
+    display: inline-block;
+    font-size: 1.0625rem;
+    color: #2997ff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.browse-link:hover {
+    color: #6cb4ff;
+    text-decoration: none;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    .skill-showcase {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .iphone {
+        transform: scale(0.82);
+    }
+
+    .act-1-text { bottom: 8%; }
+    .act-2-text, .act-3-text { bottom: 10%; }
+    .act-4-text { bottom: 4%; }
+
+    .skill-showcase {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .showcase-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .ecosystem-section {
+        padding: 5rem 1.25rem 4rem;
+    }
+
+    .tesla-trunk {
+        width: 240px;
+    }
+
+    .action-arrow {
+        display: none;
+    }
+}

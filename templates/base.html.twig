@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}OpenDispatch{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     {% block stylesheets %}{% endblock %}
     {% block importmap %}{{ importmap('app') }}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <nav class="site-nav">
         <a href="{{ path('app_home') }}" class="site-nav-brand">OpenDispatch</a>
         <div class="site-nav-links">
@@ -20,9 +23,11 @@
         </div>
     </nav>
 
+    {% block content_wrapper %}
     <div class="container">
         {% block body %}{% endblock %}
     </div>
+    {% endblock %}
 
     {% block javascripts %}{% endblock %}
 </body>

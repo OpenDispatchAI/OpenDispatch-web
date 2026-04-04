@@ -7,15 +7,21 @@ namespace App\Service;
 use App\Entity\Skill;
 use App\Repository\SkillRepository;
 use App\Trait\LoggerTrait;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillCompiler
 {
     use LoggerTrait;
+
+    private Filesystem $filesystem;
+
     public function __construct(
         private SkillRepository $skillRepository,
         private string $publicDir,
-    ) {}
+    ) {
+        $this->filesystem = new Filesystem();
+    }
 
     public function compile(): void
     {
@@ -72,7 +78,13 @@ class SkillCompiler
 
         // Copy icon if available
         if ($skill->getIconPath() && file_exists($skill->getIconPath())) {
-            copy($skill->getIconPath(), $skillDir . '/icon.png');
+            $this->filesystem->copy($skill->getIconPath(), $skillDir . '/icon.png', true);
+        }
+
+        // Copy bridge shortcut if available, preserving its original name
+        if ($skill->getBridgeShortcutFilePath() && file_exists($skill->getBridgeShortcutFilePath())) {
+            $shortcutName = ($data['bridge_shortcut'] ?? '') . '.shortcut';
+            $this->filesystem->copy($skill->getBridgeShortcutFilePath(), $skillDir . '/' . $shortcutName, true);
         }
     }
 
@@ -147,23 +159,9 @@ class SkillCompiler
                 continue;
             }
             if (!in_array($item->getFilename(), $currentIds, true)) {
-                $this->removeDirectory($item->getPathname());
+                $this->filesystem->remove($item->getPathname());
             }
         }
     }
 
-    private function removeDirectory(string $path): void
-    {
-        foreach (new \DirectoryIterator($path) as $item) {
-            if ($item->isDot()) {
-                continue;
-            }
-            if ($item->isDir()) {
-                $this->removeDirectory($item->getPathname());
-            } else {
-                unlink($item->getPathname());
-            }
-        }
-        rmdir($path);
-    }
 }

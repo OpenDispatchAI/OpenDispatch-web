@@ -144,6 +144,26 @@ class SkillCompilerTest extends TestCase
         self::assertSame([], $index['skills']);
     }
 
+    public function testCompileCopiesBridgeShortcutFile(): void
+    {
+        $skill = $this->createSkill('tesla', $this->fixtureYaml);
+
+        // Create a temp shortcut file
+        $tmpShortcut = sys_get_temp_dir() . '/test-bridge-' . uniqid() . '.shortcut';
+        file_put_contents($tmpShortcut, 'dummy shortcut data');
+        $skill->setBridgeShortcutFilePath($tmpShortcut);
+
+        $this->skillRepository->method('findAll')->willReturn([$skill]);
+
+        $this->compiler->compile();
+
+        $shortcutPath = $this->publicDir . '/api/v1/skills/tesla/OpenDispatch - Tesla V1.shortcut';
+        self::assertFileExists($shortcutPath);
+        self::assertSame('dummy shortcut data', file_get_contents($shortcutPath));
+
+        @unlink($tmpShortcut);
+    }
+
     private function createSkill(string $skillId, string $yamlContent): Skill
     {
         $skill = new Skill();

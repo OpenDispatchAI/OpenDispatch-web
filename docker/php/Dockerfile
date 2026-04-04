@@ -3,10 +3,10 @@ FROM php:8.5-fpm
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
-    libpq-dev \
     libicu-dev \
+    libsqlite3-dev \
     && docker-php-ext-install \
-    pdo_pgsql \
+    pdo_sqlite \
     intl \
     && rm -rf /var/lib/apt/lists/*
 

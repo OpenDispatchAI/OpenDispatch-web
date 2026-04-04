@@ -1,0 +1,6 @@
+# Local inventory overrides
+inventory/local*.yml
+
+# SSH key files
+*.pub
+*.pem

@@ -64,6 +64,9 @@ class Skill
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $iconPath = null;
 
+    /** Not persisted — carries the temp .shortcut file path during a sync cycle */
+    private ?string $bridgeShortcutFilePath = null;
+
     #[ORM\Column]
     private bool $isFeatured = false;
 
@@ -299,6 +302,18 @@ class Skill
     public function setIconPath(?string $iconPath): static
     {
         $this->iconPath = $iconPath;
+
+        return $this;
+    }
+
+    public function getBridgeShortcutFilePath(): ?string
+    {
+        return $this->bridgeShortcutFilePath;
+    }
+
+    public function setBridgeShortcutFilePath(?string $bridgeShortcutFilePath): static
+    {
+        $this->bridgeShortcutFilePath = $bridgeShortcutFilePath;
 
         return $this;
     }
