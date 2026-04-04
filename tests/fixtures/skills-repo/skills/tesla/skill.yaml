@@ -9,9 +9,8 @@ tags:
   - smart-home
 languages:
   - en
-bridge_shortcut:
-  name: "OpenDispatch - Tesla V1"
-  share_url: "https://www.icloud.com/shortcuts/abc123"
+bridge_shortcut: "OpenDispatch - Tesla V1"
+bridge_shortcut_share_url: "https://www.icloud.com/shortcuts/abc123"
 actions:
   - id: vehicle.unlock
     title: Unlock

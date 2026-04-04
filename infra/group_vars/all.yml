@@ -1,0 +1,7 @@
+admin_user: changeme
+admin_public_key: "ssh-ed25519 AAAA... changeme"
+deploy_public_key: "ssh-ed25519 AAAA... changeme"
+web_host: "127.0.0.1"
+domain: opendispatch.ai
+php_version: "8.5"
+certbot_email: changeme@example.com

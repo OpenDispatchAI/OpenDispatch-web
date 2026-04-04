@@ -1,0 +1,78 @@
+---
+- name: Create admin user
+  ansible.builtin.user:
+    name: "{{ admin_user }}"
+    groups: sudo
+    append: true
+    shell: /bin/bash
+    create_home: true
+
+- name: Set authorized key for admin user
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    key: "{{ admin_public_key }}"
+    state: present
+    exclusive: true
+
+- name: Allow admin user passwordless sudo
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ admin_user }}"
+    content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+
+- name: Create deploy user
+  ansible.builtin.user:
+    name: deploy
+    groups: www-data
+    append: true
+    shell: /bin/bash
+    create_home: true
+
+- name: Set authorized key for deploy user
+  ansible.posix.authorized_key:
+    user: deploy
+    key: "{{ deploy_public_key }}"
+    state: present
+    exclusive: true
+
+- name: Allow deploy user to reload PHP-FPM without password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/deploy-php-fpm
+    content: "deploy ALL=(ALL) NOPASSWD: /usr/bin/systemctl reload php{{ php_version }}-fpm"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+
+- name: Verify admin user has authorized key before hardening SSH
+  ansible.builtin.stat:
+    path: "/home/{{ admin_user }}/.ssh/authorized_keys"
+  register: admin_key_file
+  failed_when: not admin_key_file.stat.exists
+
+- name: Harden SSH config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    validate: "sshd -t -f %s"
+  loop:
+    - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
+    - { regexp: "^#?PasswordAuthentication", line: "PasswordAuthentication no" }
+    - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
+
+- name: Ensure sshd config is active (restarts if config differs from running state)
+  ansible.builtin.command:
+    cmd: sshd -T
+  register: sshd_running_config
+  changed_when: false
+
+- name: Restart sshd if password auth is still enabled
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+  when: "'passwordauthentication yes' in sshd_running_config.stdout"

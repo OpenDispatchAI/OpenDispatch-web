@@ -71,12 +71,42 @@ class SkillSyncService
             }
 
             $data = $this->validator->extractSkillData($yamlContent);
-            $iconPath = dirname($yamlPath) . '/icon.png';
+            $skillDir = dirname($yamlPath);
+            $iconPath = $skillDir . '/icon.png';
+            $shortcutFilePath = null;
+
+            // If skill has a bridge_shortcut_source, find the compiled .shortcut file
+            if (!empty($data['bridge_shortcut_source'])) {
+                $shortcutFileName = preg_replace('/\.cherri$/', '.shortcut', $data['bridge_shortcut_source']);
+                $resolvedSkillDir = realpath($skillDir);
+
+                // Resolve the real path to guard against directory traversal in user-supplied filenames
+                $resolvedPath = realpath($resolvedSkillDir . '/' . $shortcutFileName);
+                if ($resolvedPath === false || !str_starts_with($resolvedPath, $resolvedSkillDir . '/')) {
+                    $errorDetail = $resolvedPath === false
+                        ? 'expected ' . $shortcutFileName
+                        : 'path traversal detected';
+
+                    return $this->logResult(
+                        'failed', 0, $commitSha, $commitUrl, $actionRunUrl,
+                        'Invalid bridge_shortcut_source for ' . basename($skillDir) . ': ' . $errorDetail,
+                    );
+                }
+                $shortcutFilePath = $resolvedPath;
+
+                // Rewrite YAML: replace bridge_shortcut_source with bridge_shortcut_share_url
+                $shortcutPublicName = $data['bridge_shortcut'] . '.shortcut';
+                $shareUrl = '/api/v1/skills/' . $data['skill_id'] . '/' . rawurlencode($shortcutPublicName);
+                unset($data['bridge_shortcut_source']);
+                $data['bridge_shortcut_share_url'] = $shareUrl;
+                $yamlContent = Yaml::dump($data, 10, 2);
+            }
 
             $parsedSkills[] = [
                 'yamlContent' => $yamlContent,
                 'data' => $data,
                 'iconPath' => file_exists($iconPath) ? $iconPath : null,
+                'shortcutFilePath' => $shortcutFilePath,
             ];
         }
 
@@ -96,6 +126,10 @@ class SkillSyncService
 
             if ($parsed['iconPath']) {
                 $skill->setIconPath($parsed['iconPath']);
+            }
+
+            if ($parsed['shortcutFilePath']) {
+                $skill->setBridgeShortcutFilePath($parsed['shortcutFilePath']);
             }
 
             $syncedIds[] = $skillId;
