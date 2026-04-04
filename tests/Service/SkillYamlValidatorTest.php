@@ -169,14 +169,13 @@ YAML;
         self::assertStringContainsString('must have at least one example', $errors[0]);
     }
 
-    public function testBridgeShortcutWithoutShareUrlReturnsError(): void
+    public function testBridgeShortcutWithoutSourceOrShareUrlReturnsError(): void
     {
         $yaml = <<<YAML
 skill_id: tesla
 name: Tesla
 version: 1.0.0
-bridge_shortcut:
-  name: "OpenDispatch - Tesla V1"
+bridge_shortcut: "OpenDispatch - Tesla V1"
 actions:
   - id: vehicle.unlock
     examples:
@@ -185,7 +184,71 @@ YAML;
 
         $errors = $this->validator->validate($yaml);
 
-        self::assertContains('bridge_shortcut.share_url is required when bridge_shortcut is set', $errors);
+        self::assertContains('bridge_shortcut requires either bridge_shortcut_source or bridge_shortcut_share_url', $errors);
+    }
+
+    public function testBridgeShortcutSourceAndShareUrlAreMutuallyExclusive(): void
+    {
+        $yaml = <<<YAML
+skill_id: tesla
+name: Tesla
+version: 1.0.0
+bridge_shortcut: "OpenDispatch - Tesla V1"
+bridge_shortcut_source: "OpenDispatch - Tesla V1.cherri"
+bridge_shortcut_share_url: "https://example.com/shortcut"
+actions:
+  - id: vehicle.unlock
+    examples:
+      - "unlock my car"
+YAML;
+
+        $errors = $this->validator->validate($yaml);
+
+        self::assertContains('bridge_shortcut_source and bridge_shortcut_share_url are mutually exclusive', $errors);
+    }
+
+    public function testBridgeShortcutWithSourcePassesValidation(): void
+    {
+        $yaml = <<<YAML
+skill_id: tesla
+name: Tesla
+version: 1.0.0
+bridge_shortcut: "OpenDispatch - Tesla V1"
+bridge_shortcut_source: "OpenDispatch - Tesla V1.cherri"
+actions:
+  - id: vehicle.unlock
+    examples:
+      - "unlock my car"
+YAML;
+
+        $errors = $this->validator->validate($yaml);
+
+        self::assertEmpty(
+            array_filter($errors, fn(string $e) => str_contains($e, 'bridge_shortcut')),
+            'bridge_shortcut with source should not trigger bridge_shortcut errors',
+        );
+    }
+
+    public function testBridgeShortcutWithShareUrlPassesValidation(): void
+    {
+        $yaml = <<<YAML
+skill_id: tesla
+name: Tesla
+version: 1.0.0
+bridge_shortcut: "OpenDispatch - Tesla V1"
+bridge_shortcut_share_url: "https://example.com/shortcut"
+actions:
+  - id: vehicle.unlock
+    examples:
+      - "unlock my car"
+YAML;
+
+        $errors = $this->validator->validate($yaml);
+
+        self::assertEmpty(
+            array_filter($errors, fn(string $e) => str_contains($e, 'bridge_shortcut')),
+            'bridge_shortcut with share_url should not trigger bridge_shortcut errors',
+        );
     }
 
     public function testDisallowedTagReturnsError(): void

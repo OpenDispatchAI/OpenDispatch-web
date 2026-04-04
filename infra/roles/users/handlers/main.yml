@@ -1,0 +1,3 @@
+---
+# Handlers intentionally empty — sshd restart is handled explicitly in tasks
+# to avoid missed restarts when lineinfile tasks report 'ok' on re-runs.

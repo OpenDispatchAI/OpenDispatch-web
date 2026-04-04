@@ -1,0 +1,10 @@
+---
+- name: Provision OpenDispatch web server
+  hosts: all
+
+  roles:
+    - base
+    - users
+    - php
+    - nginx
+    - certbot

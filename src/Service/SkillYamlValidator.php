@@ -57,8 +57,16 @@ class SkillYamlValidator
             }
         }
 
-        if (!empty($data['bridge_shortcut']) && empty($data['bridge_shortcut']['share_url'])) {
-            $errors[] = 'bridge_shortcut.share_url is required when bridge_shortcut is set';
+        if (!empty($data['bridge_shortcut'])) {
+            $hasSource = !empty($data['bridge_shortcut_source']);
+            $hasShareUrl = !empty($data['bridge_shortcut_share_url']);
+
+            if ($hasSource && $hasShareUrl) {
+                $errors[] = 'bridge_shortcut_source and bridge_shortcut_share_url are mutually exclusive';
+            }
+            if (!$hasSource && !$hasShareUrl) {
+                $errors[] = 'bridge_shortcut requires either bridge_shortcut_source or bridge_shortcut_share_url';
+            }
         }
 
         // Tag allowlist validation

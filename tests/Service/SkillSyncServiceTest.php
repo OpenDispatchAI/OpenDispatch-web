@@ -123,6 +123,27 @@ class SkillSyncServiceTest extends TestCase
         self::assertSame(['automotive', 'smart-home'], $skill->getTags());
     }
 
+    public function testSyncRewritesBridgeShortcutSource(): void
+    {
+        $this->skillRepository->method('findOneBy')->willReturn(null);
+        $this->skillRepository->method('findAll')->willReturn([]);
+
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
+
+        self::assertSame('success', $result->getStatus());
+
+        $skills = array_filter($this->persisted, fn(object $e) => $e instanceof Skill);
+        $skill = reset($skills);
+
+        // bridge_shortcut_source should have been rewritten to bridge_shortcut_share_url
+        self::assertSame('/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut', $skill->getBridgeShortcutShareUrl());
+        self::assertNotNull($skill->getBridgeShortcutFilePath());
+
+        // The stored YAML should contain the share_url, not the source
+        self::assertStringContainsString('bridge_shortcut_share_url', $skill->getYamlContent());
+        self::assertStringNotContainsString('bridge_shortcut_source', $skill->getYamlContent());
+    }
+
     public function testSyncAbortsOnInvalidYaml(): void
     {
         $service = $this->serviceWithInvalidRepo();
