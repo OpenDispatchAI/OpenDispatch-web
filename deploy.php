@@ -21,6 +21,10 @@ task('php:fpm:reload', function () {
     run('sudo systemctl reload php8.5-fpm');
 });
 
+task('data:chown', function () {
+    run('sudo chown -R www-data:www-data {{deploy_path}}/shared/var/data');
+});
+
 task('assets:install', function () {
     run('{{bin/console}} assets:install -e "${APP_ENV:-prod}"');
 });
@@ -33,4 +37,5 @@ after('deploy:cache:clear', 'assets:install');
 after('assets:install', 'asset-map:compile');
 after('deploy:symlink', 'database:migrate');
 after('deploy:symlink', 'php:fpm:reload');
+after('deploy:symlink', 'data:chown');
 after('deploy:failed', 'deploy:unlock');
