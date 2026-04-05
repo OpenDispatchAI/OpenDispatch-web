@@ -59,23 +59,16 @@ class SkillApiControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
-    public function testIndexJsonEtag(): void
+    public function testIndexJsonHasCacheHeaders(): void
     {
         $manifest = new SkillManifest('{"skills":[]}', 'abc123');
         $this->em->persist($manifest);
         $this->em->flush();
 
-        // First request — expect 200 with ETag
         $this->client->request('GET', '/api/v1/index.json');
         self::assertResponseIsSuccessful();
-        $etag = $this->client->getResponse()->headers->get('ETag');
-        self::assertNotNull($etag);
-
-        // Second request with If-None-Match — expect 304
-        $this->client->request('GET', '/api/v1/index.json', [], [], [
-            'HTTP_IF_NONE_MATCH' => $etag,
-        ]);
-        self::assertResponseStatusCodeSame(304);
+        self::assertNotNull($this->client->getResponse()->headers->get('ETag'));
+        self::assertStringContainsString('public', $this->client->getResponse()->headers->get('Cache-Control'));
     }
 
     public function testSkillInfoJson(): void

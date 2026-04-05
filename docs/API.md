@@ -158,13 +158,17 @@ Returns the same YAML content as the `/skill.yaml` endpoint, but records the dow
 
 ## Caching
 
-All catalog endpoints (everything except `/download`) return an `ETag` header. To use conditional requests:
+Catalog endpoints are served through Symfony's built-in HTTP reverse proxy (HttpCache). Responses include `ETag` and `Cache-Control: public` headers.
 
-1. Store the `ETag` value from the response
-2. On subsequent requests, send `If-None-Match: <etag>`
-3. If content hasn't changed, the server returns `304 Not Modified` with no body
+The proxy handles conditional requests automatically — if the client sends `If-None-Match` with a matching ETag, it returns `304 Not Modified` without hitting the database.
 
-The `/download` endpoint does not support caching — it always returns the full response and logs the download.
+Cache lifetimes:
+- Index and skill metadata: 1 hour (`s-maxage=3600`)
+- Icons and shortcuts: 24 hours (`s-maxage=86400`)
+
+Content is revalidated after a sync since ETags change when skills are updated.
+
+The `/download` endpoint is not cached — it always hits PHP and logs the download.
 
 ## Errors
 
