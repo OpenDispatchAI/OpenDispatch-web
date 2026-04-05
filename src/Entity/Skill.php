@@ -120,7 +120,10 @@ class Skill
         $this->bridgeShortcutName = $data['bridge_shortcut_name'] ?? null;
         $this->bridgeShortcutShareUrl = $data['bridge_shortcut_share_url'] ?? null;
         $this->actionCount = \count($data['actions'] ?? []);
-        $this->exampleCount = \count($data['examples'] ?? []);
+        $this->exampleCount = array_sum(array_map(
+            static fn(array $a) => \count($a['examples'] ?? []),
+            $data['actions'] ?? [],
+        ));
         $this->syncedAt = new \DateTimeImmutable();
     }
 
