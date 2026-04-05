@@ -56,6 +56,15 @@
     mode: "0440"
     validate: "visudo -cf %s"
 
+- name: Allow deploy user to chmod g+w var/data without password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/deploy-chmod-data
+    content: "deploy ALL=(ALL) NOPASSWD: /usr/bin/chmod -R g+w /var/www/vhosts/{{ domain }}/shared/var/data"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+
 - name: Verify admin user has authorized key before hardening SSH
   ansible.builtin.stat:
     path: "/home/{{ admin_user }}/.ssh/authorized_keys"
