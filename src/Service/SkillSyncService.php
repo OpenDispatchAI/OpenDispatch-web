@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Skill;
 use App\Entity\SyncLog;
+use App\Repository\SkillManifestRepository;
 use App\Repository\SkillRepository;
 use App\Trait\LoggerTrait;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +26,7 @@ class SkillSyncService
         private readonly GitClient $gitClient,
         private readonly RouterInterface $router,
         private readonly string $skillsRepoUrl,
+        private readonly SkillManifestRepository $manifestRepository,
     ) {}
 
     public function sync(
@@ -158,7 +160,10 @@ class SkillSyncService
         // 8. Flush everything atomically (skills + manifest in one transaction)
         $this->em->flush();
 
-        // 9. Log success
+        // 9. Prune old manifests, keeping only the last 50
+        $this->manifestRepository->pruneOldManifests();
+
+        // 10. Log success
         $this->logger?->info('Sync completed', ['skillCount' => count($parsedSkills), 'commitSha' => $commitSha]);
 
         return $this->logResult('success', count($parsedSkills), $commitSha, $commitUrl, $actionRunUrl);

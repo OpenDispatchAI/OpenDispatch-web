@@ -6,6 +6,7 @@ namespace App\Tests\Service;
 
 use App\Entity\Skill;
 use App\Entity\SyncLog;
+use App\Repository\SkillManifestRepository;
 use App\Repository\SkillRepository;
 use App\Service\GitClient;
 use App\Service\SkillCompiler;
@@ -26,6 +27,8 @@ class SkillSyncServiceTest extends TestCase
     private array $removed = [];
 
     private int $flushCount = 0;
+
+    private bool $manifestPruned = false;
 
     private SkillRepository $skillRepository;
     private SkillSyncService $service;
@@ -58,6 +61,7 @@ class SkillSyncServiceTest extends TestCase
         $this->persisted = [];
         $this->removed = [];
         $this->flushCount = 0;
+        $this->manifestPruned = false;
 
         $em = $this->createStub(EntityManagerInterface::class);
         $this->skillRepository = $this->createStub(SkillRepository::class);
@@ -73,6 +77,12 @@ class SkillSyncServiceTest extends TestCase
             $this->flushCount++;
         });
 
+        $manifestRepository = $this->createStub(SkillManifestRepository::class);
+        $manifestRepository->method('pruneOldManifests')->willReturnCallback(function (): int {
+            $this->manifestPruned = true;
+            return 0;
+        });
+
         // GitClient stub returns a temp copy of the valid fixtures
         $tmpDir = $this->copyFixturesToTmp(__DIR__ . '/../fixtures/skills-repo-valid');
         $gitClient = $this->createStub(GitClient::class);
@@ -86,6 +96,7 @@ class SkillSyncServiceTest extends TestCase
             $gitClient,
             $this->createRouterStub(),
             'https://example.com/skills.git',
+            $manifestRepository,
         );
     }
 
@@ -115,6 +126,7 @@ class SkillSyncServiceTest extends TestCase
             $gitClient,
             $this->createRouterStub(),
             'https://example.com/skills.git',
+            $this->createStub(SkillManifestRepository::class),
         );
     }
 
@@ -301,5 +313,16 @@ class SkillSyncServiceTest extends TestCase
 
         $syncLogs = array_filter($this->persisted, fn(object $e) => $e instanceof SyncLog);
         self::assertCount(1, $syncLogs);
+    }
+
+    public function testSyncPrunesOldManifests(): void
+    {
+        $this->skillRepository->method('findOneBy')->willReturn(null);
+        $this->skillRepository->method('findAll')->willReturn([]);
+
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
+
+        self::assertSame('success', $result->getStatus());
+        self::assertTrue($this->manifestPruned, 'Manifest pruning should have been called');
     }
 }
