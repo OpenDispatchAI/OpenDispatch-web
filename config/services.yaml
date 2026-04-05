@@ -24,10 +24,6 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Service\SkillCompiler:
-        arguments:
-            $publicDir: '%kernel.project_dir%/public'
-
     App\Service\SkillSyncService:
         arguments:
             $skillsRepoUrl: '%env(SKILLS_REPO_URL)%'

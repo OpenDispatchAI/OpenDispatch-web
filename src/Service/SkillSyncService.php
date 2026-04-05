@@ -152,12 +152,13 @@ class SkillSyncService
             }
         }
 
+        // 7. Compile (writes compiled_info on each skill entity, creates SkillManifest — not flushed yet)
+        $this->compiler->compile($upsertedSkills, $commitSha);
+
+        // 8. Flush everything atomically (skills + manifest in one transaction)
         $this->em->flush();
 
-        // 7. Compile static files
-        $this->compiler->compile();
-
-        // 8. Log success
+        // 9. Log success
         $this->logger?->info('Sync completed', ['skillCount' => count($parsedSkills), 'commitSha' => $commitSha]);
 
         return $this->logResult('success', count($parsedSkills), $commitSha, $commitUrl, $actionRunUrl);

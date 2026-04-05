@@ -5,45 +5,49 @@ declare(strict_types=1);
 namespace App\Tests\Service;
 
 use App\Entity\Skill;
-use App\Repository\SkillRepository;
+use App\Entity\SkillManifest;
 use App\Service\SkillCompiler;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillCompilerTest extends TestCase
 {
-    private string $publicDir;
-    private SkillRepository $skillRepository;
+    private array $persisted = [];
     private SkillCompiler $compiler;
     private string $fixtureYaml;
 
     protected function setUp(): void
     {
-        $this->publicDir = sys_get_temp_dir() . '/skill-compiler-test-' . uniqid();
-        mkdir($this->publicDir, 0755, true);
+        $this->persisted = [];
 
-        $this->skillRepository = $this->createStub(SkillRepository::class);
-        $this->compiler = new SkillCompiler($this->skillRepository, $this->publicDir);
+        $em = $this->createStub(EntityManagerInterface::class);
+        $em->method('persist')->willReturnCallback(function (object $entity): void {
+            $this->persisted[] = $entity;
+        });
+
+        $context = new RequestContext();
+        $context->setScheme('https');
+        $context->setHost('app.opendispatch.org');
+        $router = $this->createStub(RouterInterface::class);
+        $router->method('getContext')->willReturn($context);
+
+        $this->compiler = new SkillCompiler($em, $router);
         $this->fixtureYaml = file_get_contents(__DIR__ . '/../fixtures/skills-repo/skills/tesla/skill.yaml');
-    }
-
-    protected function tearDown(): void
-    {
-        $this->removeDirectory($this->publicDir);
     }
 
     public function testCompileCreatesIndexJson(): void
     {
         $skill = $this->createSkill('tesla', $this->fixtureYaml);
 
-        $this->skillRepository->method('findAll')->willReturn([$skill]);
+        $this->compiler->compile([$skill], 'abc123');
 
-        $this->compiler->compile();
+        $manifests = array_values(array_filter($this->persisted, fn($e) => $e instanceof SkillManifest));
+        self::assertCount(1, $manifests);
 
-        $indexPath = $this->publicDir . '/api/v1/index.json';
-        self::assertFileExists($indexPath);
-
-        $index = json_decode(file_get_contents($indexPath), true);
+        $index = json_decode($manifests[0]->getContent(), true);
 
         self::assertSame(1, $index['version']);
         self::assertSame(1, $index['skill_count']);
@@ -60,38 +64,23 @@ class SkillCompilerTest extends TestCase
         self::assertSame(2, $entry['action_count']);
         self::assertSame(['test-tag'], $entry['tags']);
         self::assertSame(['en'], $entry['languages']);
-        self::assertSame('/api/v1/skills/tesla/download', $entry['download_url']);
+        self::assertSame('https://app.opendispatch.org/api/v1/skills/tesla/download', $entry['download_url']);
         self::assertNull($entry['icon_url']);
         self::assertArrayHasKey('example_count', $entry);
         self::assertArrayHasKey('created_at', $entry);
         self::assertArrayHasKey('updated_at', $entry);
     }
 
-    public function testCompileCreatesSkillYaml(): void
-    {
-        $skill = $this->createSkill('tesla', $this->fixtureYaml);
-
-        $this->skillRepository->method('findAll')->willReturn([$skill]);
-
-        $this->compiler->compile();
-
-        $yamlPath = $this->publicDir . '/api/v1/skills/tesla/skill.yaml';
-        self::assertFileExists($yamlPath);
-        self::assertSame($this->fixtureYaml, file_get_contents($yamlPath));
-    }
-
     public function testCompileCreatesInfoJson(): void
     {
         $skill = $this->createSkill('tesla', $this->fixtureYaml);
 
-        $this->skillRepository->method('findAll')->willReturn([$skill]);
+        $this->compiler->compile([$skill], 'abc123');
 
-        $this->compiler->compile();
+        $compiledInfo = $skill->getCompiledInfo();
+        self::assertNotNull($compiledInfo);
 
-        $infoPath = $this->publicDir . '/api/v1/skills/tesla/info.json';
-        self::assertFileExists($infoPath);
-
-        $info = json_decode(file_get_contents($infoPath), true);
+        $info = json_decode($compiledInfo, true);
 
         self::assertSame('tesla', $info['skill_id']);
         self::assertSame('Tesla', $info['name']);
@@ -111,57 +100,44 @@ class SkillCompilerTest extends TestCase
         self::assertTrue($secondAction['has_parameters']);
     }
 
-    public function testCompileRemovesOrphanedSkillFiles(): void
-    {
-        // Create an orphaned skill directory
-        $orphanDir = $this->publicDir . '/api/v1/skills/old-skill';
-        mkdir($orphanDir, 0755, true);
-        file_put_contents($orphanDir . '/skill.yaml', 'orphan content');
-
-        $skill = $this->createSkill('tesla', $this->fixtureYaml);
-
-        $this->skillRepository->method('findAll')->willReturn([$skill]);
-
-        $this->compiler->compile();
-
-        self::assertDirectoryDoesNotExist($orphanDir);
-        self::assertDirectoryExists($this->publicDir . '/api/v1/skills/tesla');
-    }
-
     public function testCompileWithEmptySkillListCreatesEmptyIndex(): void
     {
-        $this->skillRepository->method('findAll')->willReturn([]);
+        $this->compiler->compile([], 'abc123');
 
-        $this->compiler->compile();
+        $manifests = array_values(array_filter($this->persisted, fn($e) => $e instanceof SkillManifest));
+        self::assertCount(1, $manifests);
 
-        $indexPath = $this->publicDir . '/api/v1/index.json';
-        self::assertFileExists($indexPath);
-
-        $index = json_decode(file_get_contents($indexPath), true);
+        $index = json_decode($manifests[0]->getContent(), true);
 
         self::assertSame(1, $index['version']);
         self::assertSame(0, $index['skill_count']);
         self::assertSame([], $index['skills']);
     }
 
-    public function testCompileCopiesBridgeShortcutFile(): void
+    public function testCompileUsesAbsoluteUrls(): void
     {
         $skill = $this->createSkill('tesla', $this->fixtureYaml);
 
-        // Create a temp shortcut file
-        $tmpShortcut = sys_get_temp_dir() . '/test-bridge-' . uniqid() . '.shortcut';
-        file_put_contents($tmpShortcut, 'dummy shortcut data');
-        $skill->setBridgeShortcutFilePath($tmpShortcut);
+        $this->compiler->compile([$skill], 'abc123');
 
-        $this->skillRepository->method('findAll')->willReturn([$skill]);
+        $manifests = array_values(array_filter($this->persisted, fn($e) => $e instanceof SkillManifest));
+        $index = json_decode($manifests[0]->getContent(), true);
+        $entry = $index['skills'][0];
 
-        $this->compiler->compile();
+        self::assertStringStartsWith('https://', $entry['download_url']);
+    }
 
-        $shortcutPath = $this->publicDir . '/api/v1/skills/tesla/OpenDispatch - Tesla V1.shortcut';
-        self::assertFileExists($shortcutPath);
-        self::assertSame('dummy shortcut data', file_get_contents($shortcutPath));
+    public function testCompileStoresCompiledInfoOnSkill(): void
+    {
+        $skill = $this->createSkill('tesla', $this->fixtureYaml);
 
-        @unlink($tmpShortcut);
+        self::assertNull($skill->getCompiledInfo());
+
+        $this->compiler->compile([$skill], 'abc123');
+
+        self::assertNotNull($skill->getCompiledInfo());
+        $info = json_decode($skill->getCompiledInfo(), true);
+        self::assertSame('tesla', $info['skill_id']);
     }
 
     private function createSkill(string $skillId, string $yamlContent): Skill
@@ -172,24 +148,5 @@ class SkillCompilerTest extends TestCase
         $skill->updateFromYaml($yamlContent, $data);
         $skill->setTags(['test-tag']); // override tags for test assertion
         return $skill;
-    }
-
-    private function removeDirectory(string $path): void
-    {
-        if (!is_dir($path)) {
-            return;
-        }
-
-        foreach (new \DirectoryIterator($path) as $item) {
-            if ($item->isDot()) {
-                continue;
-            }
-            if ($item->isDir()) {
-                $this->removeDirectory($item->getPathname());
-            } else {
-                unlink($item->getPathname());
-            }
-        }
-        rmdir($path);
     }
 }
