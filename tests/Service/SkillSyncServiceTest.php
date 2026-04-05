@@ -164,7 +164,7 @@ class SkillSyncServiceTest extends TestCase
         $skill = reset($skills);
 
         // bridge_shortcut_source should have been rewritten to bridge_shortcut_share_url
-        self::assertSame('https://app.opendispatch.org/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut', $skill->getBridgeShortcutShareUrl());
+        self::assertSame('https://app.opendispatch.org/api/v1/skills/tesla/shortcut', $skill->getBridgeShortcutShareUrl());
         self::assertNotNull($skill->getShortcutData());
 
         // The stored YAML should contain the share_url, not the source

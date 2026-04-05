@@ -30,7 +30,7 @@ Skill catalog index. Lists all available skills with summary metadata.
       "tags": ["automotive", "smart-home"],
       "languages": ["en"],
       "requires_bridge_shortcut": true,
-      "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut",
+      "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/shortcut",
       "download_url": "https://opendispatch.ai/api/v1/skills/tesla/download",
       "icon": "iVBORw0KGgoAAAANSUhEUg...",
       "created_at": "2026-04-05T12:00:00+00:00",
@@ -79,7 +79,7 @@ Detailed skill information including action definitions.
   "languages": ["en"],
   "requires_bridge_shortcut": true,
   "bridge_shortcut_name": "OpenDispatch - Tesla V1",
-  "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut",
+  "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/shortcut",
   "actions": [
     {
       "id": "vehicle.unlock",
@@ -132,13 +132,13 @@ Skill icon image. Returns `404` if the skill has no icon.
 
 ---
 
-### GET /api/v1/skills/{skillId}/{filename}.shortcut
+### GET /api/v1/skills/{skillId}/shortcut
 
-iOS Shortcut file for bridge skills. The `{filename}` must match the skill's `bridge_shortcut_name` exactly (URL-encoded). Returns `404` on mismatch or if the skill has no shortcut.
+iOS Shortcut file for bridge skills. Returns `404` if the skill has no shortcut.
 
-Use the `bridge_shortcut_share_url` from the index or info response directly — it contains the correct filename.
+The response includes a `Content-Disposition` header with the correct filename derived from the skill's `bridge_shortcut_name`.
 
-**Response:** `application/octet-stream`, `Content-Disposition: attachment`
+**Response:** `application/octet-stream`, `Content-Disposition: attachment; filename="{name}.shortcut"`
 
 ---
 

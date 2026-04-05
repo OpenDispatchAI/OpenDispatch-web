@@ -73,24 +73,17 @@ class SkillApiController extends AbstractController
         ]);
     }
 
-    #[Route('/api/v1/skills/{skillId}/{filename}.shortcut', name: 'api_skill_shortcut')]
-    public function shortcut(
-        string $skillId,
-        string $filename,
-        SkillRepository $skillRepository,
-    ): Response {
+    #[Route('/api/v1/skills/{skillId}/shortcut', name: 'api_skill_shortcut')]
+    public function shortcut(string $skillId, SkillRepository $skillRepository): Response
+    {
         $skill = $skillRepository->findOneBy(['skillId' => $skillId]);
         if (!$skill || !$skill->getShortcutData()) {
             throw $this->createNotFoundException();
         }
 
-        if ($filename !== $skill->getBridgeShortcutName()) {
-            throw $this->createNotFoundException();
-        }
-
         return new Response(base64_decode($skill->getShortcutData()), 200, [
             'Content-Type' => 'application/octet-stream',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '.shortcut"',
+            'Content-Disposition' => 'attachment; filename="' . $skill->getBridgeShortcutName() . '.shortcut"',
             'ETag' => '"' . $skill->getUpdatedAt()->getTimestamp() . '"',
             'Cache-Control' => 'public, s-maxage=86400',
         ]);

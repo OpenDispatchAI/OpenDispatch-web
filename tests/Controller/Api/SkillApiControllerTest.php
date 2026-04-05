@@ -147,7 +147,7 @@ class SkillApiControllerTest extends WebTestCase
         $this->em->persist($skill);
         $this->em->flush();
 
-        $this->client->request('GET', '/api/v1/skills/tesla/TestShortcut.shortcut');
+        $this->client->request('GET', '/api/v1/skills/tesla/shortcut');
 
         self::assertResponseIsSuccessful();
         self::assertSame('application/octet-stream', $this->client->getResponse()->headers->get('Content-Type'));
@@ -155,15 +155,13 @@ class SkillApiControllerTest extends WebTestCase
         self::assertSame($binaryData, $this->client->getResponse()->getContent());
     }
 
-    public function testShortcutWrongFilename404(): void
+    public function testShortcutReturns404WhenNoData(): void
     {
         $skill = $this->createTestSkill();
-        $skill->setShortcutData(base64_encode('some data'));
-        $skill->setBridgeShortcutName('TestShortcut');
         $this->em->persist($skill);
         $this->em->flush();
 
-        $this->client->request('GET', '/api/v1/skills/tesla/WrongName.shortcut');
+        $this->client->request('GET', '/api/v1/skills/tesla/shortcut');
         self::assertResponseStatusCodeSame(404);
     }
 

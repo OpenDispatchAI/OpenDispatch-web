@@ -98,10 +98,9 @@ class SkillSyncService
                 $shortcutFilePath = $resolvedPath;
 
                 // Rewrite YAML: replace bridge_shortcut_source with bridge_shortcut_share_url
-                $shortcutPublicName = $data['bridge_shortcut'] . '.shortcut';
                 $ctx = $this->router->getContext();
                 $baseUrl = $ctx->getScheme() . '://' . $ctx->getHost();
-                $shareUrl = $baseUrl . '/api/v1/skills/' . $data['skill_id'] . '/' . rawurlencode($shortcutPublicName);
+                $shareUrl = $baseUrl . '/api/v1/skills/' . $data['skill_id'] . '/shortcut';
                 unset($data['bridge_shortcut_source']);
                 $data['bridge_shortcut_share_url'] = $shareUrl;
                 $yamlContent = Yaml::dump($data, 10, 2);
