@@ -23,6 +23,7 @@ task('php:fpm:reload', function () {
 
 task('data:chown', function () {
     run('sudo chown -R www-data:www-data {{deploy_path}}/shared/var/data');
+    run('sudo chmod -R g+w {{deploy_path}}/shared/var/data');
 });
 
 task('assets:install', function () {
@@ -35,7 +36,7 @@ task('asset-map:compile', function () {
 
 after('deploy:cache:clear', 'assets:install');
 after('assets:install', 'asset-map:compile');
-after('deploy:symlink', 'database:migrate');
-after('deploy:symlink', 'php:fpm:reload');
 after('deploy:symlink', 'data:chown');
+after('data:chown', 'database:migrate');
+after('database:migrate', 'php:fpm:reload');
 after('deploy:failed', 'deploy:unlock');
