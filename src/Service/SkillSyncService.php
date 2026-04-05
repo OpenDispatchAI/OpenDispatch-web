@@ -10,6 +10,7 @@ use App\Repository\SkillRepository;
 use App\Trait\LoggerTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Yaml\Yaml;
 
 class SkillSyncService
@@ -22,6 +23,7 @@ class SkillSyncService
         private readonly SkillYamlValidator $validator,
         private readonly SkillCompiler $compiler,
         private readonly GitClient $gitClient,
+        private readonly RouterInterface $router,
         private readonly string $skillsRepoUrl,
     ) {}
 
@@ -72,7 +74,6 @@ class SkillSyncService
 
             $data = $this->validator->extractSkillData($yamlContent);
             $skillDir = dirname($yamlPath);
-            $iconPath = $skillDir . '/icon.png';
             $shortcutFilePath = null;
 
             // If skill has a bridge_shortcut_source, find the compiled .shortcut file
@@ -96,22 +97,36 @@ class SkillSyncService
 
                 // Rewrite YAML: replace bridge_shortcut_source with bridge_shortcut_share_url
                 $shortcutPublicName = $data['bridge_shortcut'] . '.shortcut';
-                $shareUrl = '/api/v1/skills/' . $data['skill_id'] . '/' . rawurlencode($shortcutPublicName);
+                $ctx = $this->router->getContext();
+                $baseUrl = $ctx->getScheme() . '://' . $ctx->getHost();
+                $shareUrl = $baseUrl . '/api/v1/skills/' . $data['skill_id'] . '/' . rawurlencode($shortcutPublicName);
                 unset($data['bridge_shortcut_source']);
                 $data['bridge_shortcut_share_url'] = $shareUrl;
                 $yamlContent = Yaml::dump($data, 10, 2);
             }
 
+            $iconData = null;
+            $iconPath = $skillDir . '/icon.png';
+            if (file_exists($iconPath)) {
+                $iconData = base64_encode(file_get_contents($iconPath));
+            }
+
+            $shortcutData = null;
+            if ($shortcutFilePath) {
+                $shortcutData = base64_encode(file_get_contents($shortcutFilePath));
+            }
+
             $parsedSkills[] = [
                 'yamlContent' => $yamlContent,
                 'data' => $data,
-                'iconPath' => file_exists($iconPath) ? $iconPath : null,
-                'shortcutFilePath' => $shortcutFilePath,
+                'iconData' => $iconData,
+                'shortcutData' => $shortcutData,
             ];
         }
 
         // 5. All valid — upsert
         $syncedIds = [];
+        $upsertedSkills = [];
         foreach ($parsedSkills as $parsed) {
             $skillId = $parsed['data']['skill_id'];
             $skill = $this->skillRepository->findOneBy(['skillId' => $skillId]);
@@ -123,15 +138,10 @@ class SkillSyncService
             }
 
             $skill->updateFromYaml($parsed['yamlContent'], $parsed['data']);
+            $skill->setIconData($parsed['iconData']);
+            $skill->setShortcutData($parsed['shortcutData']);
 
-            if ($parsed['iconPath']) {
-                $skill->setIconPath($parsed['iconPath']);
-            }
-
-            if ($parsed['shortcutFilePath']) {
-                $skill->setBridgeShortcutFilePath($parsed['shortcutFilePath']);
-            }
-
+            $upsertedSkills[] = $skill;
             $syncedIds[] = $skillId;
         }
 

@@ -14,6 +14,8 @@ use App\Service\SkillYamlValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\RouterInterface;
 
 class SkillSyncServiceTest extends TestCase
 {
@@ -27,6 +29,18 @@ class SkillSyncServiceTest extends TestCase
 
     private SkillRepository $skillRepository;
     private SkillSyncService $service;
+
+    private function createRouterStub(): RouterInterface
+    {
+        $context = new RequestContext();
+        $context->setScheme('https');
+        $context->setHost('app.opendispatch.org');
+
+        $router = $this->createStub(RouterInterface::class);
+        $router->method('getContext')->willReturn($context);
+
+        return $router;
+    }
 
     /**
      * Copy a fixture dir to a temp location so sync()'s finally block can safely delete it.
@@ -70,6 +84,7 @@ class SkillSyncServiceTest extends TestCase
             new SkillYamlValidator(),
             $compiler,
             $gitClient,
+            $this->createRouterStub(),
             'https://example.com/skills.git',
         );
     }
@@ -98,6 +113,7 @@ class SkillSyncServiceTest extends TestCase
             new SkillYamlValidator(),
             $this->createStub(SkillCompiler::class),
             $gitClient,
+            $this->createRouterStub(),
             'https://example.com/skills.git',
         );
     }
@@ -136,8 +152,8 @@ class SkillSyncServiceTest extends TestCase
         $skill = reset($skills);
 
         // bridge_shortcut_source should have been rewritten to bridge_shortcut_share_url
-        self::assertSame('/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut', $skill->getBridgeShortcutShareUrl());
-        self::assertNotNull($skill->getBridgeShortcutFilePath());
+        self::assertSame('https://app.opendispatch.org/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut', $skill->getBridgeShortcutShareUrl());
+        self::assertNotNull($skill->getShortcutData());
 
         // The stored YAML should contain the share_url, not the source
         self::assertStringContainsString('bridge_shortcut_share_url', $skill->getYamlContent());
@@ -227,6 +243,41 @@ class SkillSyncServiceTest extends TestCase
 
         self::assertSame('success', $result->getStatus());
         self::assertContains($orphanSkill, $this->removed, 'Orphaned skill should be removed');
+    }
+
+    public function testSyncBase64EncodesIconData(): void
+    {
+        $this->skillRepository->method('findOneBy')->willReturn(null);
+        $this->skillRepository->method('findAll')->willReturn([]);
+
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
+
+        self::assertSame('success', $result->getStatus());
+
+        $skills = array_filter($this->persisted, fn(object $e) => $e instanceof Skill);
+        $skill = reset($skills);
+
+        self::assertNotNull($skill->getIconData());
+        $decoded = base64_decode($skill->getIconData(), true);
+        self::assertNotFalse($decoded);
+        self::assertStringStartsWith("\x89PNG", $decoded);
+    }
+
+    public function testSyncBase64EncodesShortcutData(): void
+    {
+        $this->skillRepository->method('findOneBy')->willReturn(null);
+        $this->skillRepository->method('findAll')->willReturn([]);
+
+        $result = $this->service->sync('abc123def456', 'https://github.com/example/commit/abc123', null);
+
+        self::assertSame('success', $result->getStatus());
+
+        $skills = array_filter($this->persisted, fn(object $e) => $e instanceof Skill);
+        $skill = reset($skills);
+
+        self::assertNotNull($skill->getShortcutData());
+        $decoded = base64_decode($skill->getShortcutData(), true);
+        self::assertNotFalse($decoded);
     }
 
     public function testSyncLogsSyncResult(): void
