@@ -60,13 +60,13 @@ class DownloadControllerTest extends WebTestCase
         self::assertSame('1.2.0', $downloads[0]->getAppVersion());
     }
 
-    public function testDownloadWithoutVersionHeaderStoresNull(): void
+    public function testDownloadWithoutVersionHeaderDefaultsToWeb(): void
     {
         $this->client->request('GET', '/api/v1/skills/tesla/download');
 
         $downloads = $this->em->getRepository(SkillDownload::class)->findAll();
         self::assertCount(1, $downloads);
-        self::assertNull($downloads[0]->getAppVersion());
+        self::assertSame('web', $downloads[0]->getAppVersion());
     }
 
     public function testDownloadReturns404ForUnknownSkill(): void
