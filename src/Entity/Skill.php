@@ -52,7 +52,7 @@ class Skill
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $bridgeShortcutName = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $bridgeShortcutShareUrl = null;
 
     #[ORM\Column]
@@ -61,11 +61,14 @@ class Skill
     #[ORM\Column]
     private int $exampleCount = 0;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $iconPath = null;
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $iconData = null;
 
-    /** Not persisted — carries the temp .shortcut file path during a sync cycle */
-    private ?string $bridgeShortcutFilePath = null;
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $shortcutData = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $compiledInfo = null;
 
     #[ORM\Column]
     private bool $isFeatured = false;
@@ -294,26 +297,38 @@ class Skill
         return $this;
     }
 
-    public function getIconPath(): ?string
+    public function getIconData(): ?string
     {
-        return $this->iconPath;
+        return $this->iconData;
     }
 
-    public function setIconPath(?string $iconPath): static
+    public function setIconData(?string $iconData): static
     {
-        $this->iconPath = $iconPath;
+        $this->iconData = $iconData;
 
         return $this;
     }
 
-    public function getBridgeShortcutFilePath(): ?string
+    public function getShortcutData(): ?string
     {
-        return $this->bridgeShortcutFilePath;
+        return $this->shortcutData;
     }
 
-    public function setBridgeShortcutFilePath(?string $bridgeShortcutFilePath): static
+    public function setShortcutData(?string $shortcutData): static
     {
-        $this->bridgeShortcutFilePath = $bridgeShortcutFilePath;
+        $this->shortcutData = $shortcutData;
+
+        return $this;
+    }
+
+    public function getCompiledInfo(): ?string
+    {
+        return $this->compiledInfo;
+    }
+
+    public function setCompiledInfo(?string $compiledInfo): static
+    {
+        $this->compiledInfo = $compiledInfo;
 
         return $this;
     }
