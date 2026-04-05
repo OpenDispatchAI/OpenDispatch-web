@@ -1,0 +1,175 @@
+# OpenDispatch Skill API
+
+Base URL: `https://opendispatch.ai`
+
+All catalog endpoints support ETag-based caching. Send `If-None-Match` with the ETag value from a previous response to receive `304 Not Modified` when the content hasn't changed.
+
+## Endpoints
+
+### GET /api/v1/index.json
+
+Skill catalog index. Lists all available skills with summary metadata.
+
+**Response:** `application/json`
+
+```json
+{
+  "version": 1,
+  "generated_at": "2026-04-05T12:00:00+00:00",
+  "skill_count": 1,
+  "skills": [
+    {
+      "skill_id": "tesla",
+      "name": "Tesla",
+      "version": "1.0.0",
+      "description": "Control your Tesla",
+      "author": "opendispatch",
+      "author_url": "https://opendispatch.ai",
+      "action_count": 2,
+      "example_count": 3,
+      "tags": ["automotive", "smart-home"],
+      "languages": ["en"],
+      "requires_bridge_shortcut": true,
+      "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut",
+      "download_url": "https://opendispatch.ai/api/v1/skills/tesla/download",
+      "icon_url": "https://opendispatch.ai/api/v1/skills/tesla/icon.png",
+      "created_at": "2026-04-05T12:00:00+00:00",
+      "updated_at": "2026-04-05T12:00:00+00:00"
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `skill_id` | string | Unique identifier |
+| `name` | string | Display name |
+| `version` | string | Semver version |
+| `description` | string | Short description |
+| `author` | string | Author name |
+| `author_url` | string? | Author website |
+| `action_count` | int | Number of actions the skill provides |
+| `example_count` | int | Number of example phrases |
+| `tags` | string[] | Categorization tags |
+| `languages` | string[] | Supported language codes |
+| `requires_bridge_shortcut` | bool | Whether the skill needs an iOS Shortcut to function |
+| `bridge_shortcut_share_url` | string? | Absolute URL to download the `.shortcut` file |
+| `download_url` | string | Absolute URL to the download/install endpoint |
+| `icon_url` | string? | Absolute URL to the skill icon, or `null` if none |
+| `created_at` | string | ISO 8601 timestamp |
+| `updated_at` | string | ISO 8601 timestamp |
+
+---
+
+### GET /api/v1/skills/{skillId}/info.json
+
+Detailed skill information including action definitions.
+
+**Response:** `application/json`
+
+```json
+{
+  "skill_id": "tesla",
+  "name": "Tesla",
+  "version": "1.0.0",
+  "description": "Control your Tesla",
+  "author": "opendispatch",
+  "author_url": "https://opendispatch.ai",
+  "tags": ["automotive", "smart-home"],
+  "languages": ["en"],
+  "requires_bridge_shortcut": true,
+  "bridge_shortcut_name": "OpenDispatch - Tesla V1",
+  "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut",
+  "actions": [
+    {
+      "id": "vehicle.unlock",
+      "title": "Unlock",
+      "description": "Unlock the car doors",
+      "example_count": 2,
+      "has_parameters": false,
+      "confirmation": null
+    },
+    {
+      "id": "vehicle.climate.set_temperature",
+      "title": "Set Temperature",
+      "description": "Set the cabin temperature",
+      "example_count": 1,
+      "has_parameters": true,
+      "confirmation": null
+    }
+  ],
+  "created_at": "2026-04-05T12:00:00+00:00",
+  "updated_at": "2026-04-05T12:00:00+00:00"
+}
+```
+
+**Action fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Action identifier (e.g. `vehicle.unlock`) |
+| `title` | string | Display title |
+| `description` | string | What the action does |
+| `example_count` | int | Number of example trigger phrases |
+| `has_parameters` | bool | Whether the action accepts parameters |
+| `confirmation` | string? | Confirmation prompt shown before executing, or `null` |
+
+---
+
+### GET /api/v1/skills/{skillId}/skill.yaml
+
+Raw skill YAML definition. This is the full skill file the app needs for execution.
+
+**Response:** `text/yaml`, `Content-Disposition: inline`
+
+---
+
+### GET /api/v1/skills/{skillId}/icon.png
+
+Skill icon image. Returns `404` if the skill has no icon.
+
+**Response:** `image/png`
+
+---
+
+### GET /api/v1/skills/{skillId}/{filename}.shortcut
+
+iOS Shortcut file for bridge skills. The `{filename}` must match the skill's `bridge_shortcut_name` exactly (URL-encoded). Returns `404` on mismatch or if the skill has no shortcut.
+
+Use the `bridge_shortcut_share_url` from the index or info response directly — it contains the correct filename.
+
+**Response:** `application/octet-stream`, `Content-Disposition: attachment`
+
+---
+
+### GET /api/v1/skills/{skillId}/download
+
+Install/download a skill. This is the **action endpoint** — it logs each download for analytics. Use this when the user explicitly installs a skill, not for browsing.
+
+**Request headers:**
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `X-OpenDispatch-Version` | No | App version string (e.g. `1.2.0`). Defaults to `web` if omitted. |
+
+**Response:** `text/yaml`, `Content-Disposition: attachment; filename="skill.yaml"`
+
+Returns the same YAML content as the `/skill.yaml` endpoint, but records the download.
+
+## Caching
+
+All catalog endpoints (everything except `/download`) return an `ETag` header. To use conditional requests:
+
+1. Store the `ETag` value from the response
+2. On subsequent requests, send `If-None-Match: <etag>`
+3. If content hasn't changed, the server returns `304 Not Modified` with no body
+
+The `/download` endpoint does not support caching — it always returns the full response and logs the download.
+
+## Errors
+
+| Status | Meaning |
+|--------|---------|
+| `200` | Success |
+| `304` | Not Modified (ETag match) |
+| `404` | Skill not found, resource unavailable, or filename mismatch |
