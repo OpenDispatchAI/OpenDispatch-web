@@ -13,7 +13,7 @@ add('shared_dirs', ['var/data']);
 add('writable_dirs', []);
 
 host('opendispatch_prod')
-    ->set('hostname', '$_ENV["OPENDISPATCH_PROD_HOST"]')
+    ->set('hostname', $_ENV['OPENDISPATCH_PROD_HOST'])
     ->set('remote_user', 'deploy')
     ->set('deploy_path', '/var/www/vhosts/opendispatch.ai');
 
