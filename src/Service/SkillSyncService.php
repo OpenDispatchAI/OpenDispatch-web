@@ -27,6 +27,7 @@ class SkillSyncService
         private readonly RouterInterface $router,
         private readonly string $skillsRepoUrl,
         private readonly SkillManifestRepository $manifestRepository,
+        private readonly string $cacheDir,
     ) {}
 
     public function sync(
@@ -161,6 +162,10 @@ class SkillSyncService
 
         // 9. Prune old manifests, keeping only the last 50
         $this->manifestRepository->pruneOldManifests();
+
+        // 10. Clear HTTP cache so stale responses are not served
+        $httpCacheDir = $this->cacheDir . '/http_cache';
+        (new Filesystem())->remove($httpCacheDir);
 
         // 10. Log success
         $this->logger?->info('Sync completed', ['skillCount' => count($parsedSkills), 'commitSha' => $commitSha]);

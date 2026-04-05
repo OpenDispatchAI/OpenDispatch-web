@@ -27,6 +27,7 @@ services:
     App\Service\SkillSyncService:
         arguments:
             $skillsRepoUrl: '%env(SKILLS_REPO_URL)%'
+            $cacheDir: '%kernel.cache_dir%'
 
     App\Controller\Api\WebhookController:
         arguments:

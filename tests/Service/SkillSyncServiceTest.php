@@ -97,6 +97,7 @@ class SkillSyncServiceTest extends TestCase
             $this->createRouterStub(),
             'https://example.com/skills.git',
             $manifestRepository,
+            sys_get_temp_dir(),
         );
     }
 
@@ -127,6 +128,7 @@ class SkillSyncServiceTest extends TestCase
             $this->createRouterStub(),
             'https://example.com/skills.git',
             $this->createStub(SkillManifestRepository::class),
+            sys_get_temp_dir(),
         );
     }
 
