@@ -28,7 +28,7 @@ class DownloadController extends AbstractController
 
         $download = new SkillDownload();
         $download->setSkill($skill);
-        $download->setAppVersion($request->headers->get('X-OpenDispatch-Version'));
+        $download->setAppVersion($request->headers->get('X-OpenDispatch-Version', 'web'));
         $em->persist($download);
         $em->flush();
 
