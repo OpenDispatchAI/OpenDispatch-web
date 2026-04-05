@@ -117,7 +117,7 @@ class Skill
         $this->tags = $data['tags'] ?? [];
         $this->languages = $data['languages'] ?? [];
         $this->requiresBridgeShortcut = $data['requires_bridge_shortcut'] ?? false;
-        $this->bridgeShortcutName = $data['bridge_shortcut_name'] ?? null;
+        $this->bridgeShortcutName = $data['bridge_shortcut'] ?? null;
         $this->bridgeShortcutShareUrl = $data['bridge_shortcut_share_url'] ?? null;
         $this->actionCount = \count($data['actions'] ?? []);
         $this->exampleCount = array_sum(array_map(
