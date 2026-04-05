@@ -32,7 +32,7 @@ Skill catalog index. Lists all available skills with summary metadata.
       "requires_bridge_shortcut": true,
       "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/OpenDispatch%20-%20Tesla%20V1.shortcut",
       "download_url": "https://opendispatch.ai/api/v1/skills/tesla/download",
-      "icon_url": "https://opendispatch.ai/api/v1/skills/tesla/icon.png",
+      "icon": "iVBORw0KGgoAAAANSUhEUg...",
       "created_at": "2026-04-05T12:00:00+00:00",
       "updated_at": "2026-04-05T12:00:00+00:00"
     }
@@ -55,7 +55,7 @@ Skill catalog index. Lists all available skills with summary metadata.
 | `requires_bridge_shortcut` | bool | Whether the skill needs an iOS Shortcut to function |
 | `bridge_shortcut_share_url` | string? | Absolute URL to download the `.shortcut` file |
 | `download_url` | string | Absolute URL to the download/install endpoint |
-| `icon_url` | string? | Absolute URL to the skill icon, or `null` if none |
+| `icon` | string? | Base64-encoded PNG icon, or `null` if none |
 | `created_at` | string | ISO 8601 timestamp |
 | `updated_at` | string | ISO 8601 timestamp |
 

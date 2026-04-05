@@ -75,9 +75,7 @@ class SkillCompiler
             'requires_bridge_shortcut' => $skill->requiresBridgeShortcut(),
             'bridge_shortcut_share_url' => $skill->getBridgeShortcutShareUrl(),
             'download_url' => $baseUrl . '/api/v1/skills/' . $skill->getSkillId() . '/download',
-            'icon_url' => $skill->getIconData()
-                ? $baseUrl . '/api/v1/skills/' . $skill->getSkillId() . '/icon.png'
-                : null,
+            'icon' => $skill->getIconData(),
             'created_at' => $skill->getCreatedAt()->format('c'),
             'updated_at' => $skill->getUpdatedAt()->format('c'),
         ];

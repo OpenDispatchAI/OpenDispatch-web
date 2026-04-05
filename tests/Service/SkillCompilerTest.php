@@ -65,7 +65,7 @@ class SkillCompilerTest extends TestCase
         self::assertSame(['test-tag'], $entry['tags']);
         self::assertSame(['en'], $entry['languages']);
         self::assertSame('https://app.opendispatch.org/api/v1/skills/tesla/download', $entry['download_url']);
-        self::assertNull($entry['icon_url']);
+        self::assertNull($entry['icon']);
         self::assertArrayHasKey('example_count', $entry);
         self::assertArrayHasKey('created_at', $entry);
         self::assertArrayHasKey('updated_at', $entry);
@@ -125,6 +125,20 @@ class SkillCompilerTest extends TestCase
         $entry = $index['skills'][0];
 
         self::assertStringStartsWith('https://', $entry['download_url']);
+    }
+
+    public function testCompileIncludesIconInIndex(): void
+    {
+        $skill = $this->createSkill('tesla', $this->fixtureYaml);
+        $skill->setIconData('iVBORw0KGgoAAAANSUhEUg==');
+
+        $this->compiler->compile([$skill], 'abc123');
+
+        $manifests = array_values(array_filter($this->persisted, fn($e) => $e instanceof SkillManifest));
+        $index = json_decode($manifests[0]->getContent(), true);
+        $entry = $index['skills'][0];
+
+        self::assertSame('iVBORw0KGgoAAAANSUhEUg==', $entry['icon']);
     }
 
     public function testCompileStoresCompiledInfoOnSkill(): void
