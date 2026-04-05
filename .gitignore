@@ -25,6 +25,3 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
-###> opendispatch ###
-/public/api/
-###< opendispatch ###
