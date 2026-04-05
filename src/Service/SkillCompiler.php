@@ -105,7 +105,7 @@ class SkillCompiler
             'tags' => $skill->getTags(),
             'languages' => $skill->getLanguages(),
             'requires_bridge_shortcut' => $skill->requiresBridgeShortcut(),
-            'bridge_shortcut_name' => $skill->getBridgeShortcutName(),
+            'bridge_shortcut' => $skill->getBridgeShortcutName(),
             'bridge_shortcut_share_url' => $skill->getBridgeShortcutShareUrl(),
             'actions' => $actions,
             'created_at' => $skill->getCreatedAt()->format('c'),

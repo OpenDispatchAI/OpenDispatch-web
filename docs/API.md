@@ -78,7 +78,7 @@ Detailed skill information including action definitions.
   "tags": ["automotive", "smart-home"],
   "languages": ["en"],
   "requires_bridge_shortcut": true,
-  "bridge_shortcut_name": "OpenDispatch - Tesla V1",
+  "bridge_shortcut": "OpenDispatch - Tesla V1",
   "bridge_shortcut_share_url": "https://opendispatch.ai/api/v1/skills/tesla/shortcut",
   "actions": [
     {
